@@ -1,7 +1,7 @@
 {
   "name": "ts-rate-limiter",
   "type": "module",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "High-performance, flexible rate limiting for TypeScript and Bun",
   "author": "Chris Breuer <chris@stacksjs.org>",
   "license": "MIT",

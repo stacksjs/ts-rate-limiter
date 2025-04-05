@@ -1,4 +1,16 @@
 
+## v0.3.0...main
+
+[compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.3.0...main)
+
+### 🏡 Chore
+
+- Adjust target build ([50365e4](https://github.com/stacksjs/ts-rate-limiter/commit/50365e4))
+
+### ❤️ Contributors
+
+- Chris ([@chrisbbreuer](https://github.com/chrisbbreuer))
+
 ## v0.2.1...main
 
 [compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.2.1...main)
