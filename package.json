@@ -1,0 +1,87 @@
+{
+  "name": "ts-rate-limiter",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "High-performance, flexible rate limiting for TypeScript and Bun",
+  "author": "Chris Breuer <chris@stacksjs.org>",
+  "license": "MIT",
+  "homepage": "https://github.com/stacksjs/ts-rate-limiter#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stacksjs/ts-rate-limiter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/stacksjs/ts-rate-limiter/issues"
+  },
+  "keywords": [
+    "rate",
+    "limiter",
+    "rate-limit",
+    "rate-limiter",
+    "rate-limiting",
+    "rate-limiting-api",
+    "rate-limiting-middleware",
+    "typescript",
+    "api",
+    "middleware",
+    "security",
+    "bun",
+    "library",
+    "package"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./*": {
+      "import": "./dist/*"
+    }
+  },
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "ts-rate-limiter": "./dist/bin/init-config.js"
+  },
+  "files": [
+    "LICENSE.md",
+    "README.md",
+    "dist"
+  ],
+  "scripts": {
+    "build": "bun --bun build.ts",
+    "lint": "bunx --bun eslint .",
+    "lint:fix": "bunx --bun eslint . --fix",
+    "fresh": "bunx rimraf node_modules/ bun.lock && bun i",
+    "changelog": "bunx changelogen --output CHANGELOG.md",
+    "prepublishOnly": "bun --bun run build",
+    "release": "bun run changelog && bunx bumpp package.json --all",
+    "test": "bun test",
+    "dev:docs": "bun --bun vitepress dev docs",
+    "build:docs": "bun --bun vitepress build docs",
+    "preview:docs": "bun --bun vitepress preview docs",
+    "typecheck": "bun --bun tsc --noEmit",
+    "benchmark": "bun run benchmark/index.ts",
+    "benchmark:algorithms": "bun run benchmark/algorithms.ts",
+    "example": "bun run examples/advanced-rate-limiting.ts",
+    "init-config": "bun run bin/init-config.ts"
+  },
+  "devDependencies": {
+    "@stacksjs/docs": "^0.70.23",
+    "@stacksjs/eslint-config": "^4.10.2-beta.3",
+    "@types/bun": "^1.2.8",
+    "bumpp": "^10.1.0",
+    "bun-plugin-dtsx": "^0.21.9",
+    "bunfig": "^0.8.2",
+    "changelogen": "^0.6.1",
+    "lint-staged": "^15.5.0",
+    "simple-git-hooks": "^2.12.1",
+    "typescript": "^5.8.3"
+  },
+  "overrides": {
+    "unconfig": "0.3.10"
+  },
+  "lint-staged": {
+    "*.{js,ts}": "bunx --bun eslint . --fix"
+  }
+}
