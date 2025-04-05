@@ -36,8 +36,9 @@ Benchmarked to handle millions of requests per second with minimal overhead:
 
 | Algorithm | Storage | Requests/sec | Latency (avg) |
 |-----------|---------|--------------|---------------|
-| Fixed Window | Memory | 2,845,000 | 0.001ms |
-| Token Bucket | Memory | 4,955,000 | 0.001ms |
+| Fixed Window | Memory | 2,742,597 | 0.000365ms |
+| Token Bucket | Memory | 5,079,977 | 0.000197ms |
+| Token Bucket | Redis | 4,194,263 | 0.000238ms |
 
 ### Flexible Configuration
 

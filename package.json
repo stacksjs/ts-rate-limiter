@@ -63,6 +63,7 @@
     "typecheck": "bun --bun tsc --noEmit",
     "benchmark": "bun run benchmark/index.ts",
     "benchmark:algorithms": "bun run benchmark/algorithms.ts",
+    "benchmark:redis": "bun run benchmark/redis.ts",
     "example": "bun run examples/advanced-rate-limiting.ts",
     "init-config": "bun run bin/init-config.ts"
   },
@@ -75,6 +76,7 @@
     "bunfig": "^0.8.2",
     "changelogen": "^0.6.1",
     "lint-staged": "^15.5.0",
+    "redis": "^4.7.0",
     "simple-git-hooks": "^2.12.1",
     "typescript": "^5.8.3"
   },

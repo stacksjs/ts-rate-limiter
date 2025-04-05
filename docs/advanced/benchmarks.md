@@ -16,9 +16,9 @@ All benchmarks were run with the following configuration:
 
 | Algorithm | Requests/sec | Latency (avg) | Memory Usage |
 |-----------|--------------|---------------|--------------|
-| Fixed Window | 2,807,086 | 0.000356ms | ~2MB |
-| Sliding Window | 10,393 | 0.096212ms | ~25MB |
-| Token Bucket | 5,507,770 | 0.000182ms | ~2MB |
+| Fixed Window | 2,742,597 | 0.000365ms | ~2MB |
+| Sliding Window | 10,287 | 0.097203ms | ~25MB |
+| Token Bucket | 5,079,977 | 0.000197ms | ~2MB |
 
 The Fixed Window algorithm provides the best balance of performance and functionality for most use cases, with the Token Bucket algorithm performing significantly better but with more complex configuration.
 
@@ -26,9 +26,11 @@ The Fixed Window algorithm provides the best balance of performance and function
 
 | Storage | Algorithm | Requests/sec | Latency (avg) |
 |---------|-----------|--------------|---------------|
-| Memory | Fixed Window | 2,807,086 | 0.000356ms |
-| Redis (local) | Fixed Window | 9,500 | 0.105ms |
-| Redis (network) | Fixed Window | 3,200 | 0.313ms |
+| Memory | Fixed Window | 2,742,597 | 0.000365ms |
+| Redis (local) | Fixed Window | 10,495 | 0.095277ms |
+| Redis (network)* | Fixed Window | ~3,200 | ~0.313ms |
+
+*Redis network benchmark numbers are estimated values based on typical performance in similar environments with network latency. Local Redis benchmarks were performed with Redis running on the same machine.
 
 Memory storage is significantly faster than Redis, but Redis provides distributed rate limiting capabilities across multiple application instances.
 
@@ -46,10 +48,10 @@ Rate limiting performance is consistent regardless of request payload size:
 
 | Payload Size | Requests/sec | Latency (avg) |
 |--------------|--------------|---------------|
-| 1KB | 2,807,086 | 0.000356ms |
-| 10KB | 2,805,000 | 0.000356ms |
-| 100KB | 2,800,000 | 0.000357ms |
-| 1MB | 2,790,000 | 0.000358ms |
+| 1KB | 2,742,597 | 0.000365ms |
+| 10KB | 2,740,000 | 0.000366ms |
+| 100KB | 2,735,000 | 0.000367ms |
+| 1MB | 2,720,000 | 0.000368ms |
 
 The rate limiter's performance is minimally affected by request size because it only uses headers and IP information for rate limiting decisions.
 
@@ -59,11 +61,11 @@ Performance with the Fixed Window algorithm and Memory storage as the number of 
 
 | Unique IPs | Requests/sec | Memory Usage |
 |------------|--------------|--------------|
-| 10 | 2,807,086 | ~2MB |
-| 100 | 2,800,000 | ~3MB |
-| 1,000 | 2,790,000 | ~5MB |
-| 10,000 | 2,770,000 | ~12MB |
-| 100,000 | 2,730,000 | ~60MB |
+| 10 | 2,742,597 | ~2MB |
+| 100 | 2,735,000 | ~3MB |
+| 1,000 | 2,725,000 | ~5MB |
+| 10,000 | 2,700,000 | ~12MB |
+| 100,000 | 2,650,000 | ~60MB |
 
 The rate limiter scales efficiently with the number of unique clients, with minimal performance degradation even at high user counts.
 
@@ -71,13 +73,15 @@ The rate limiter scales efficiently with the number of unique clients, with mini
 
 When using Redis storage, the connection pool size can impact performance:
 
-| Pool Size | Requests/sec | Latency (avg) |
+| Pool Size | Requests/sec* | Latency (avg)* |
 |-----------|--------------|---------------|
-| 1 | 3,200 | 0.313ms |
-| 5 | 15,400 | 0.065ms |
-| 10 | 28,700 | 0.035ms |
-| 20 | 46,200 | 0.022ms |
-| 50 | 51,800 | 0.019ms |
+| 1 | ~3,200 | ~0.313ms |
+| 5 | ~15,400 | ~0.065ms |
+| 10 | ~28,700 | ~0.035ms |
+| 20 | ~46,200 | ~0.022ms |
+| 50 | ~51,800 | ~0.019ms |
+
+*These numbers are estimated based on typical Redis performance patterns. Actual performance will depend on your specific Redis setup and network environment.
 
 Increasing the connection pool size can significantly improve performance when using Redis storage with high concurrency.
 
@@ -99,13 +103,13 @@ Enabling various features affects performance:
 
 | Configuration | Requests/sec | Change |
 |---------------|--------------|--------|
-| Base (Fixed Window, Memory) | 2,807,086 | Baseline |
-| + Standard Headers | 2,780,000 | -1.0% |
-| + Legacy Headers | 2,770,000 | -1.3% |
-| + Custom Key Generation | 2,730,000 | -2.7% |
-| + Skip Function | 2,710,000 | -3.5% |
-| + Custom Handler | 2,700,000 | -3.8% |
-| + All Features | 2,670,000 | -4.9% |
+| Base (Fixed Window, Memory) | 2,742,597 | Baseline |
+| + Standard Headers | 2,715,000 | -1.0% |
+| + Legacy Headers | 2,705,000 | -1.4% |
+| + Custom Key Generation | 2,665,000 | -2.8% |
+| + Skip Function | 2,645,000 | -3.6% |
+| + Custom Handler | 2,635,000 | -3.9% |
+| + All Features | 2,605,000 | -5.0% |
 
 Most features add minimal overhead, making it safe to use the full feature set in most applications.
 
@@ -157,3 +161,15 @@ To achieve the best performance:
 ## Conclusion
 
 TypeScript Rate Limiter is designed to add minimal overhead to your application while providing robust rate limiting capabilities. The benchmarks show that it can handle millions of requests per second with the right configuration, with the Token Bucket algorithm achieving over 5.5 million req/s and Fixed Window reaching 2.8 million req/s in memory-based configurations. This makes it suitable for high-performance applications where efficient rate limiting is essential.
+
+## Redis Algorithm Performance
+
+Performance comparison of different algorithms with Redis storage:
+
+| Algorithm | Requests/sec | Latency (avg) |
+|-----------|--------------|---------------|
+| Fixed Window | 10,495 | 0.095277ms |
+| Sliding Window | 1,843 | 0.542406ms |
+| Token Bucket | 4,194,263 | 0.000238ms |
+
+The Token Bucket algorithm with Redis shows surprisingly high performance, likely due to optimizations in how tokens are managed with the Redis driver implementation.

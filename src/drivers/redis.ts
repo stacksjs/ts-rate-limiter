@@ -1,4 +1,4 @@
-import type { StorageProvider } from '../types'
+import type { RedisStorageOptions, StorageProvider } from '../types'
 
 /**
  * Redis storage implementation with optimized performance
@@ -9,8 +9,8 @@ export class RedisStorage implements StorageProvider {
   private slidingWindowEnabled: boolean
   private luaScript: string
 
-  constructor(redisClient: any, options: { keyPrefix?: string, enableSlidingWindow?: boolean } = {}) {
-    this.client = redisClient
+  constructor(options: RedisStorageOptions) {
+    this.client = options.client
     this.keyPrefix = options.keyPrefix || 'brl:'
     this.slidingWindowEnabled = options.enableSlidingWindow || false
 
@@ -46,16 +46,18 @@ export class RedisStorage implements StorageProvider {
 
     // Use Redis LUA script for atomic operations
     try {
+      // Try to use EVAL command directly
       const result = await this.client.eval(
         this.luaScript,
-        1,
-        fullKey,
-        windowMs,
-        now,
+        {
+          keys: [fullKey],
+          arguments: [windowMs.toString(), now.toString()],
+        },
       )
 
-      const count = Number(result[0])
-      const ttl = Number(result[1])
+      // Check if result is array or single value
+      const count = Array.isArray(result) ? Number(result[0]) : Number(result)
+      const ttl = Array.isArray(result) ? Number(result[1]) : windowMs / 1000
 
       return {
         count,
@@ -70,47 +72,43 @@ export class RedisStorage implements StorageProvider {
   }
 
   private async incrementStandard(fullKey: string, windowMs: number, now: number): Promise<{ count: number, resetTime: number }> {
-    // Use Redis pipeline to perform multiple operations atomically
-    const [countStr, ttlResult] = await this.client.pipeline()
-      .incr(fullKey)
-      .ttl(fullKey)
-      .exec()
+    // First increment the counter
+    const count = await this.client.incr(fullKey)
 
-    const count = Number.parseInt(countStr, 10)
-    const ttl = Number.parseInt(ttlResult, 10)
+    // Then get the TTL
+    let ttl = await this.client.ttl(fullKey)
 
     // Set expiration if this is a new key or TTL is negative
     if (count === 1 || ttl < 0) {
       await this.client.expire(fullKey, Math.ceil(windowMs / 1000))
+      ttl = windowMs / 1000
     }
 
     return {
-      count,
+      count: Number(count),
       resetTime: now + (ttl > 0 ? ttl * 1000 : windowMs),
     }
   }
 
   private async incrementSlidingWindow(fullKey: string, windowMs: number, now: number): Promise<{ count: number, resetTime: number }> {
     const windowKey = `${fullKey}:window`
-    const windowScore = now
-    const windowExpiry = now - windowMs
+    const windowScore = now.toString()
+    const windowExpiry = (now - windowMs).toString()
 
-    // Use Redis transaction for sliding window implementation
-    const result = await this.client.multi()
-      // Add current timestamp to sorted set
-      .zadd(windowKey, windowScore, windowScore)
-      // Remove timestamps outside the window
-      .zremrangebyscore(windowKey, 0, windowExpiry)
-      // Count elements in the sorted set (current count in window)
-      .zcard(windowKey)
-      // Set expiry on the sorted set
-      .pexpire(windowKey, windowMs)
-      .exec()
+    // Add current timestamp to sorted set
+    await this.client.zAdd(windowKey, { score: windowScore, value: windowScore })
 
-    const count = Number(result[2])
+    // Remove timestamps outside the window
+    await this.client.zRemRangeByScore(windowKey, '0', windowExpiry)
+
+    // Count elements in the sorted set (current count in window)
+    const count = await this.client.zCard(windowKey)
+
+    // Set expiry on the sorted set
+    await this.client.pExpire(windowKey, windowMs)
 
     return {
-      count,
+      count: Number(count),
       resetTime: now + windowMs,
     }
   }
@@ -119,11 +117,17 @@ export class RedisStorage implements StorageProvider {
     const fullKey = this.keyPrefix + key
 
     if (this.slidingWindowEnabled) {
-      await this.client.del(fullKey, `${fullKey}:window`)
+      await this.client.del([fullKey, `${fullKey}:window`])
     }
     else {
       await this.client.del(fullKey)
     }
+  }
+
+  async getCount(key: string): Promise<number> {
+    const fullKey = this.keyPrefix + key
+    const count = await this.client.get(fullKey)
+    return count ? Number(count) : 0
   }
 
   async getSlidingWindowCount(key: string, windowMs: number): Promise<number> {
@@ -133,70 +137,60 @@ export class RedisStorage implements StorageProvider {
 
     const windowKey = `${this.keyPrefix}${key}:window`
     const now = Date.now()
-    const windowExpiry = now - windowMs
+    const windowExpiry = (now - windowMs).toString()
 
-    // Remove expired entries and count remaining
-    const result = await this.client.multi()
-      .zremrangebyscore(windowKey, 0, windowExpiry)
-      .zcard(windowKey)
-      .exec()
+    // Remove expired entries
+    await this.client.zRemRangeByScore(windowKey, '0', windowExpiry)
 
-    return Number(result[1])
+    // Count remaining
+    const count = await this.client.zCard(windowKey)
+
+    return Number(count)
   }
 
   async batchIncrement(keys: string[], windowMs: number): Promise<Map<string, { count: number, resetTime: number }>> {
     const results = new Map<string, { count: number, resetTime: number }>()
     const now = Date.now()
 
-    // Use pipeline for better performance with multiple keys
-    const pipeline = this.client.pipeline()
-
+    // Process each key sequentially since we don't have pipeline in this version
     for (const key of keys) {
       const fullKey = this.keyPrefix + key
 
       if (this.slidingWindowEnabled) {
         const windowKey = `${fullKey}:window`
-        pipeline.zadd(windowKey, now, now)
-        pipeline.zremrangebyscore(windowKey, 0, now - windowMs)
-        pipeline.zcard(windowKey)
-        pipeline.pexpire(windowKey, windowMs)
-      }
-      else {
-        pipeline.incr(fullKey)
-        pipeline.ttl(fullKey)
-      }
-    }
+        const windowScore = now.toString()
+        const windowExpiry = (now - windowMs).toString()
 
-    const responses = await pipeline.exec()
+        await this.client.zAdd(windowKey, { score: windowScore, value: windowScore })
+        await this.client.zRemRangeByScore(windowKey, '0', windowExpiry)
+        const count = await this.client.zCard(windowKey)
+        await this.client.pExpire(windowKey, windowMs)
 
-    // Process the responses
-    let responseIndex = 0
-    for (const key of keys) {
-      if (this.slidingWindowEnabled) {
-        const count = Number(responses[responseIndex + 2][1])
         results.set(key, {
-          count,
+          count: Number(count),
           resetTime: now + windowMs,
         })
-        responseIndex += 4
       }
       else {
-        const count = Number(responses[responseIndex][1])
-        const ttl = Number(responses[responseIndex + 1][1])
+        const count = await this.client.incr(fullKey)
+        const ttl = await this.client.ttl(fullKey)
 
         // Set expiration if this is a new key or TTL is negative
         if (count === 1 || ttl < 0) {
-          this.client.expire(this.keyPrefix + key, Math.ceil(windowMs / 1000))
+          await this.client.expire(fullKey, Math.ceil(windowMs / 1000))
         }
 
         results.set(key, {
-          count,
+          count: Number(count),
           resetTime: now + (ttl > 0 ? ttl * 1000 : windowMs),
         })
-        responseIndex += 2
       }
     }
 
     return results
+  }
+
+  async dispose(): Promise<void> {
+    // No need to do anything here, client is managed externally
   }
 }

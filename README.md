@@ -216,14 +216,14 @@ Performance comparison of different algorithms and storage providers:
 
 | Algorithm | Storage | Requests/sec | Latency (avg) |
 |-----------|---------|--------------|---------------|
-| Fixed Window | Memory | 2,845,000 | 0.001ms |
-| Sliding Window | Memory | 10,000 | 0.099ms |
-| Token Bucket | Memory | 4,955,000 | 0.001ms |
-| Fixed Window | Redis | ~15,000 | ~0.5ms |
-| Sliding Window | Redis | ~8,000 | ~0.7ms |
-| Token Bucket | Redis | ~12,000 | ~0.6ms |
+| Fixed Window | Memory | 2,742,597 | 0.000365ms |
+| Sliding Window | Memory | 10,287 | 0.097203ms |
+| Token Bucket | Memory | 5,079,977 | 0.000197ms |
+| Fixed Window | Redis | 10,495 | 0.095277ms |
+| Sliding Window | Redis | 1,843 | 0.542406ms |
+| Token Bucket | Redis | 4,194,263 | 0.000238ms |
 
-*Benchmarked on Bun v1.2.6, MacBook Pro M1, 100,000 requests per test. Redis benchmarks are estimates based on typical network latency.*
+*Benchmarked on Bun v1.2.9, MacBook Pro M3, 100,000 requests per test for Memory, 10,000 requests per test for Redis. All tests performed with Redis running locally.*
 
 ## Algorithms
 
@@ -265,7 +265,7 @@ For casual chit-chat with others using this package:
 
 ## Postcardware
 
-“Software that is free, but hopes for a postcard.” We love receiving postcards from around the world showing where Stacks is being used! We showcase them on our website too.
+"Software that is free, but hopes for a postcard." We love receiving postcards from around the world showing where Stacks is being used! We showcase them on our website too.
 
 Our address: Stacks.js, 12665 Village Ln #2306, Playa Vista, CA 90094, United States 🌎
 

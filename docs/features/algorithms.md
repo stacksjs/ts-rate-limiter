@@ -119,8 +119,8 @@ The algorithm choice affects performance. In our benchmarks:
 
 | Algorithm | Requests/sec (Memory) | Latency (avg) |
 |-----------|-------------|--------------|
-| Fixed Window | 2,845,000 | 0.001ms |
-| Sliding Window | 10,000 | 0.099ms |
-| Token Bucket | 4,955,000 | 0.001ms |
+| Fixed Window | 2,742,597 | 0.000365ms |
+| Sliding Window | 10,287 | 0.097203ms |
+| Token Bucket | 5,079,977 | 0.000197ms |
 
 Choose based on your specific requirements and performance needs.
