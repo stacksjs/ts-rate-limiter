@@ -6,7 +6,7 @@
 <!-- [![npm downloads][npm-downloads-src]][npm-downloads-href] -->
 <!-- [![Codecov][codecov-src]][codecov-href] -->
 
-# TypeScript Rate Limiter
+# ts-rate-limiter
 
 A high-performance, flexible rate limiting library for TypeScript and Bun.
 
