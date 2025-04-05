@@ -1,4 +1,16 @@
 
+## v0.2.1...main
+
+[compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.2.1...main)
+
+### 🏡 Chore
+
+- Increase configurability ([2601b5a](https://github.com/stacksjs/ts-rate-limiter/commit/2601b5a))
+
+### ❤️ Contributors
+
+- Chris ([@chrisbbreuer](https://github.com/chrisbbreuer))
+
 ## v0.2.0...main
 
 [compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.2.0...main)
