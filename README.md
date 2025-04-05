@@ -247,7 +247,7 @@ bun test
 
 ## Changelog
 
-Please see our [releases](https://github.com/stackjs/bun-ts-starter/releases) page for more information on what has changed recently.
+Please see our [releases](https://github.com/stackjs/ts-rate-limiter/releases) page for more information on what has changed recently.
 
 ## Contributing
 
@@ -257,7 +257,7 @@ Please see [CONTRIBUTING](.github/CONTRIBUTING.md) for details.
 
 For help, discussion about best practices, or any other conversation that would benefit from being searchable:
 
-[Discussions on GitHub](https://github.com/stacksjs/ts-starter/discussions)
+[Discussions on GitHub](https://github.com/stacksjs/ts-rate-limiter/discussions)
 
 For casual chit-chat with others using this package:
 
@@ -283,10 +283,10 @@ The MIT License (MIT). Please see [LICENSE](LICENSE.md) for more information.
 Made with 💙
 
 <!-- Badges -->
-[npm-version-src]: https://img.shields.io/npm/v/bun-ts-starter?style=flat-square
-[npm-version-href]: https://npmjs.com/package/bun-ts-starter
-[github-actions-src]: https://img.shields.io/github/actions/workflow/status/stacksjs/ts-starter/ci.yml?style=flat-square&branch=main
-[github-actions-href]: https://github.com/stacksjs/ts-starter/actions?query=workflow%3Aci
+[npm-version-src]: https://img.shields.io/npm/v/ts-rate-limiter?style=flat-square
+[npm-version-href]: https://npmjs.com/package/ts-rate-limiter
+[github-actions-src]: https://img.shields.io/github/actions/workflow/status/stacksjs/ts-rate-limiter/ci.yml?style=flat-square&branch=main
+[github-actions-href]: https://github.com/stacksjs/ts-rate-limiter/actions?query=workflow%3Aci
 
-<!-- [codecov-src]: https://img.shields.io/codecov/c/gh/stacksjs/ts-starter/main?style=flat-square
-[codecov-href]: https://codecov.io/gh/stacksjs/ts-starter -->
+<!-- [codecov-src]: https://img.shields.io/codecov/c/gh/stacksjs/ts-rate-limiter/main?style=flat-square
+[codecov-href]: https://codecov.io/gh/stacksjs/ts-rate-limiter -->
