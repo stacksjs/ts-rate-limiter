@@ -55,14 +55,14 @@ import type { RateLimiterConfig } from 'ts-rate-limiter'
 
 const config: RateLimiterConfig = {
   verbose: true,
-  defaultStorage: 'memory',
-  defaultAlgorithm: 'sliding-window',
+  storage: 'memory',
+  algorithm: 'sliding-window',
 
   // Uncomment to use Redis as the default storage
-  // defaultStorage: 'redis',
+  // storage: 'redis',
 
   // Use 'fixed-window', 'sliding-window', or 'token-bucket'
-  // defaultAlgorithm: 'token-bucket',
+  // algorithm: 'token-bucket',
 }
 
 export default config

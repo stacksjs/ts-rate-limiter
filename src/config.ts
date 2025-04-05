@@ -3,8 +3,8 @@ import { loadConfig } from 'bunfig'
 
 export const defaultConfig: RateLimiterConfig = {
   verbose: true,
-  defaultStorage: 'memory',
-  defaultAlgorithm: 'fixed-window',
+  storage: 'memory',
+  algorithm: 'fixed-window',
 }
 
 // eslint-disable-next-line antfu/no-top-level-await

@@ -3,11 +3,11 @@ export interface RateLimiterConfig {
   /**
    * Default storage provider to use
    */
-  defaultStorage?: 'memory' | 'redis'
+  storage?: 'memory' | 'redis'
   /**
    * Default algorithm to use
    */
-  defaultAlgorithm?: 'fixed-window' | 'sliding-window' | 'token-bucket'
+  algorithm?: 'fixed-window' | 'sliding-window' | 'token-bucket'
 }
 
 /**
