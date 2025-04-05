@@ -4,7 +4,7 @@ layout: home
 
 hero:
   name: "ts-rate-limiter"
-  text: "High-performance rate limiting."
+  text: "High-Performance Rate Limiting"
   tagline: "Flexible, scalable rate limiting for TypeScript applications."
   image: /images/logo-white.png
   actions:
