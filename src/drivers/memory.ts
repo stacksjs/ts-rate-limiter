@@ -1,4 +1,5 @@
-import type { StorageProvider } from '../types'
+import type { MemoryStorageOptions, StorageProvider } from '../types'
+import { config } from '../config'
 
 /**
  * In-memory storage implementation with optimized performance
@@ -6,16 +7,23 @@ import type { StorageProvider } from '../types'
 export class MemoryStorage implements StorageProvider {
   private records: Map<string, { count: number, resetTime: number }>
   private timestamps: Map<string, number[]>
-  private cleanupInterval?: NodeJS.Timeout
+  private cleanupTimer: NodeJS.Timeout | null
+  private enableAutoCleanup: boolean
+  private cleanupIntervalMs: number
 
-  constructor(options: { enableAutoCleanup?: boolean, cleanupIntervalMs?: number } = {}) {
+  constructor(options?: MemoryStorageOptions) {
     this.records = new Map()
     this.timestamps = new Map()
 
-    // Setup automatic cleanup if enabled
-    if (options.enableAutoCleanup) {
-      const interval = options.cleanupIntervalMs || 60000 // Default: clean every minute
-      this.cleanupInterval = setInterval(() => this.cleanExpired(), interval)
+    // Use config defaults if options not provided
+    const defaultConfig = config.memoryStorage || {}
+
+    this.enableAutoCleanup = options?.enableAutoCleanup ?? defaultConfig.enableAutoCleanup ?? false
+    this.cleanupIntervalMs = options?.cleanupIntervalMs ?? defaultConfig.cleanupIntervalMs ?? 60 * 1000
+    this.cleanupTimer = null
+
+    if (this.enableAutoCleanup) {
+      this.startCleanupTimer()
     }
   }
 
@@ -105,8 +113,12 @@ export class MemoryStorage implements StorageProvider {
    * Dispose any resources used by this storage provider
    */
   dispose(): void {
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval)
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer)
     }
+  }
+
+  private startCleanupTimer(): void {
+    this.cleanupTimer = setInterval(() => this.cleanExpired(), this.cleanupIntervalMs)
   }
 }

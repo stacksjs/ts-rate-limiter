@@ -1,13 +1,64 @@
 export interface RateLimiterConfig {
+  /**
+   * Enable verbose logging
+   */
   verbose: boolean
+
   /**
    * Default storage provider to use
    */
   storage?: 'memory' | 'redis'
+
   /**
    * Default algorithm to use
    */
   algorithm?: 'fixed-window' | 'sliding-window' | 'token-bucket'
+
+  /**
+   * Default window size in milliseconds
+   */
+  windowMs?: number
+
+  /**
+   * Default max requests per window
+   */
+  maxRequests?: number
+
+  /**
+   * Default key prefix for Redis storage
+   */
+  redisKeyPrefix?: string
+
+  /**
+   * Default behavior for standard headers
+   */
+  standardHeaders?: boolean
+
+  /**
+   * Default behavior for legacy headers
+   */
+  legacyHeaders?: boolean
+
+  /**
+   * Default draft mode setting
+   */
+  draftMode?: boolean
+
+  /**
+   * Default memory storage options
+   */
+  memoryStorage?: {
+    enableAutoCleanup?: boolean
+    cleanupIntervalMs?: number
+  }
+
+  /**
+   * Default Redis connection options (if using Redis)
+   */
+  redis?: {
+    url?: string
+    enableSlidingWindow?: boolean
+  }
 }
 
 /**

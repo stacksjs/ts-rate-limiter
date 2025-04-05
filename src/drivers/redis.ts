@@ -1,4 +1,5 @@
 import type { RedisStorageOptions, StorageProvider } from '../types'
+import { config } from '../config'
 
 /**
  * Redis storage implementation with optimized performance
@@ -11,8 +12,11 @@ export class RedisStorage implements StorageProvider {
 
   constructor(options: RedisStorageOptions) {
     this.client = options.client
-    this.keyPrefix = options.keyPrefix || 'brl:'
-    this.slidingWindowEnabled = options.enableSlidingWindow || false
+
+    // Use global config for defaults if not explicitly provided
+    const redisConfig = config.redis || {}
+    this.keyPrefix = options.keyPrefix ?? config.redisKeyPrefix ?? 'ratelimit:'
+    this.slidingWindowEnabled = options.enableSlidingWindow ?? redisConfig.enableSlidingWindow ?? false
 
     // LUA script for atomic operations
     this.luaScript = `
@@ -34,6 +38,13 @@ export class RedisStorage implements StorageProvider {
 
       return {count, ttl}
     `
+
+    // Verbose logging if enabled
+    if (config.verbose) {
+      console.warn(`[ts-rate-limiter] Redis storage initialized with:
+  - Key Prefix: ${this.keyPrefix}
+  - Sliding Window: ${this.slidingWindowEnabled ? 'enabled' : 'disabled'}`)
+    }
   }
 
   async increment(key: string, windowMs: number): Promise<{ count: number, resetTime: number }> {

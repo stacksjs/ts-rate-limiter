@@ -5,6 +5,7 @@ import type {
   StorageProvider,
   TokenBucketOptions,
 } from './types'
+import { config } from './config'
 import { MemoryStorage } from './drivers/memory'
 
 /**
@@ -26,17 +27,36 @@ export class RateLimiter {
   private tokenBuckets: Map<string, { tokens: number, lastRefill: number }>
 
   constructor(options: RateLimiterOptions) {
-    this.windowMs = options.windowMs
-    this.maxRequests = options.maxRequests
-    this.storage = options.storage || new MemoryStorage()
-    this.skipFailedRequests = options.skipFailedRequests || false
+    // Use provided options or fallback to global config
+    this.windowMs = options.windowMs || config.windowMs || 60 * 1000
+    this.maxRequests = options.maxRequests || config.maxRequests || 100
+
+    // Check for zero max requests - it should be treated as 0, not fallback to defaults
+    if (options.maxRequests === 0) {
+      this.maxRequests = 0
+    }
+
+    // Set up storage based on options or config
+    if (options.storage) {
+      this.storage = options.storage
+    }
+    else if (config.storage === 'redis' && config.redis) {
+      // Try to create Redis storage from global config
+      throw new Error('Redis client must be provided explicitly when using Redis storage')
+    }
+    else {
+      // Create memory storage with config options
+      this.storage = new MemoryStorage(config.memoryStorage)
+    }
+
+    this.skipFailedRequests = options.skipFailedRequests ?? false
     this.keyGenerator = options.keyGenerator || this.defaultKeyGenerator
-    this.algorithm = options.algorithm || 'fixed-window'
-    this.standardHeaders = options.standardHeaders !== false
-    this.legacyHeaders = options.legacyHeaders !== false
+    this.algorithm = options.algorithm || config.algorithm || 'fixed-window'
+    this.standardHeaders = options.standardHeaders ?? config.standardHeaders ?? true
+    this.legacyHeaders = options.legacyHeaders ?? config.legacyHeaders ?? true
     this.skipFn = options.skip
     this.handler = options.handler
-    this.draftMode = options.draftMode || false
+    this.draftMode = options.draftMode ?? config.draftMode ?? false
     this.tokenBuckets = new Map()
 
     // Set up token bucket if using that algorithm
@@ -45,6 +65,20 @@ export class RateLimiter {
         capacity: this.maxRequests,
         refillRate: this.maxRequests / (this.windowMs / 1000) / 1000, // tokens per ms
       }
+    }
+
+    // Verbose logging if enabled
+    if (config.verbose) {
+      const storageType = options.storage
+        ? (options.storage instanceof MemoryStorage ? 'memory (custom)' : 'redis (custom)')
+        : config.storage
+
+      console.warn(`[ts-rate-limiter] Initialized with:
+  - Algorithm: ${this.algorithm}
+  - Window: ${this.windowMs}ms
+  - Max Requests: ${this.maxRequests}
+  - Storage: ${storageType}
+  - Draft Mode: ${this.draftMode ? 'enabled' : 'disabled'}`)
     }
   }
 
@@ -81,6 +115,17 @@ export class RateLimiter {
       // Check if this request should be skipped
       if (this.skipFn && await this.skipFn(request)) {
         return this.createAllowedResult()
+      }
+
+      // If maxRequests is 0, always block
+      if (this.maxRequests === 0) {
+        return {
+          allowed: false,
+          current: 1,
+          limit: 0,
+          remaining: this.windowMs,
+          resetTime: Date.now() + this.windowMs,
+        }
       }
 
       const key = await this.keyGenerator(request)

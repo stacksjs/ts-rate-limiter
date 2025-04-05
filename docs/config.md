@@ -54,19 +54,83 @@ This will create a `rate-limiter.config.ts` file in your project with the follow
 import type { RateLimiterConfig } from 'ts-rate-limiter'
 
 const config: RateLimiterConfig = {
+  // Core Settings
   verbose: true,
   storage: 'memory',
   algorithm: 'sliding-window',
 
-  // Uncomment to use Redis as the default storage
-  // storage: 'redis',
+  // Default Limits
+  windowMs: 60 * 1000, // 1 minute window
+  maxRequests: 100, // 100 requests per window
 
-  // Use 'fixed-window', 'sliding-window', or 'token-bucket'
-  // algorithm: 'token-bucket',
+  // Response Settings
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: true, // Return rate limit info in the `X-RateLimit-*` headers
+
+  // Testing/Development
+  draftMode: false, // Set to true to record but not block requests
+
+  // Memory Storage Options
+  memoryStorage: {
+    enableAutoCleanup: true,
+    cleanupIntervalMs: 60 * 1000, // 1 minute
+  },
+
+  // Redis Options (when storage is 'redis')
+  redisKeyPrefix: 'ratelimit:',
+  redis: {
+    url: 'redis://localhost:6379',
+    enableSlidingWindow: true,
+  },
 }
 
 export default config
 ```
+
+## Using the Factory Function
+
+For even easier configuration, you can use the factory function which will automatically use your configuration file:
+
+```ts
+import { createRateLimiter } from 'ts-rate-limiter'
+
+// Create a rate limiter using configuration defaults
+const limiter = await createRateLimiter()
+
+// Or override specific options
+const customLimiter = await createRateLimiter({
+  maxRequests: 50, // Override just the max requests
+  draftMode: true, // Enable draft mode for testing
+})
+```
+
+The `createRateLimiter` function will:
+
+1. Load your configuration file
+2. Apply any overrides you specify
+3. Automatically connect to Redis if configured
+4. Fall back to memory storage if Redis connection fails
+5. Return a fully configured RateLimiter instance
+
+## Global Configuration Options
+
+Here's the complete list of configuration options available in the `rate-limiter.config.ts` file:
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `verbose` | boolean | `true` | Enable verbose logging |
+| `storage` | 'memory' \| 'redis' | 'memory' | Default storage provider |
+| `algorithm` | 'fixed-window' \| 'sliding-window' \| 'token-bucket' | 'fixed-window' | Default algorithm |
+| `windowMs` | number | 60000 | Default window size in milliseconds |
+| `maxRequests` | number | 100 | Default max requests per window |
+| `standardHeaders` | boolean | true | Default behavior for standard headers |
+| `legacyHeaders` | boolean | true | Default behavior for legacy headers |
+| `draftMode` | boolean | false | Default draft mode setting |
+| `redisKeyPrefix` | string | 'ratelimit:' | Default key prefix for Redis storage |
+| `memoryStorage.enableAutoCleanup` | boolean | true | Enable automatic cleanup of expired records |
+| `memoryStorage.cleanupIntervalMs` | number | 60000 | Interval for cleanup in milliseconds |
+| `redis.url` | string | 'redis://localhost:6379' | Redis connection URL |
+| `redis.enableSlidingWindow` | boolean | false | Enable sliding window with Redis |
 
 ## Storage Providers
 
