@@ -1,4 +1,44 @@
 
+## v0.1.0...main
+
+[compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.1.0...main)
+
+### 📖 Documentation
+
+- Add API Reference page ([488037c](https://github.com/stacksjs/ts-rate-limiter/commit/488037c))
+
+### 🏡 Chore
+
+- Adjust release workflow name ([81fbe51](https://github.com/stacksjs/ts-rate-limiter/commit/81fbe51))
+- Adjust links ([fdaa05e](https://github.com/stacksjs/ts-rate-limiter/commit/fdaa05e))
+- Add fathom analytics ([e924a5f](https://github.com/stacksjs/ts-rate-limiter/commit/e924a5f))
+- Use titlecase ([585e382](https://github.com/stacksjs/ts-rate-limiter/commit/585e382))
+- Rename config options ([5009c1a](https://github.com/stacksjs/ts-rate-limiter/commit/5009c1a))
+
+### ❤️ Contributors
+
+- Chris ([@chrisbbreuer](https://github.com/chrisbbreuer))
+
+## v0.1.0...main
+
+[compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.1.0...main)
+
+### 📖 Documentation
+
+- Add API Reference page ([488037c](https://github.com/stacksjs/ts-rate-limiter/commit/488037c))
+
+### 🏡 Chore
+
+- Adjust release workflow name ([81fbe51](https://github.com/stacksjs/ts-rate-limiter/commit/81fbe51))
+- Adjust links ([fdaa05e](https://github.com/stacksjs/ts-rate-limiter/commit/fdaa05e))
+- Add fathom analytics ([e924a5f](https://github.com/stacksjs/ts-rate-limiter/commit/e924a5f))
+- Use titlecase ([585e382](https://github.com/stacksjs/ts-rate-limiter/commit/585e382))
+- Rename config options ([5009c1a](https://github.com/stacksjs/ts-rate-limiter/commit/5009c1a))
+
+### ❤️ Contributors
+
+- Chris ([@chrisbbreuer](https://github.com/chrisbbreuer))
+
 ## ...main
 
 
