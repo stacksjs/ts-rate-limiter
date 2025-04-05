@@ -218,7 +218,7 @@ class MockRedisStorage implements Storage {
 import { MemoryStorage, RateLimiter } from 'ts-rate-limiter'
 
 // Mock Date.now globally for time-based tests
-const realDateNow = Date.now.bind(global.Date)
+const realDateNow = Date.now.bind(globalThis.Date)
 
 describe('Time-based Rate Limiting', () => {
   let storage: MemoryStorage
@@ -230,7 +230,7 @@ describe('Time-based Rate Limiting', () => {
     now = 1609459200000 // 2021-01-01T00:00:00Z
 
     // Mock Date.now
-    global.Date.now = jest.fn(() => now)
+    globalThis.Date.now = jest.fn(() => now)
 
     storage = new MemoryStorage()
     limiter = new RateLimiter({
@@ -242,7 +242,7 @@ describe('Time-based Rate Limiting', () => {
 
   afterEach(() => {
     // Restore the real Date.now
-    global.Date.now = realDateNow
+    globalThis.Date.now = realDateNow
   })
 
   test('should reset after window expires', async () => {

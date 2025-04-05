@@ -1,6 +1,5 @@
 #!/usr/bin/env bun
 
-import type { RateLimiterConfig } from '../src/types'
 import { existsSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import process from 'node:process'

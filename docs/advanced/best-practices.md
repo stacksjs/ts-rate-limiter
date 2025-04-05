@@ -420,7 +420,7 @@ Advise clients on implementing exponential backoff:
 // Client-side implementation example (JavaScript)
 async function fetchWithBackoff(url, maxRetries = 5) {
   let retries = 0
-  let backoffTime = 1000 // Start with 1s backoff
+  const backoffTime = 1000 // Start with 1s backoff
 
   while (retries < maxRetries) {
     try {

@@ -1,6 +1,6 @@
-import type { RateLimitResult, StorageProvider } from '../src/types'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, mock, spyOn, test } from 'bun:test'
-import { MemoryStorage, RateLimiter, RedisStorage } from '../src'
+import type { RateLimitResult } from '../src/types'
+import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
+import { MemoryStorage, RateLimiter } from '../src'
 
 describe('ts-rate-limiter', () => {
   describe('MemoryStorage', () => {

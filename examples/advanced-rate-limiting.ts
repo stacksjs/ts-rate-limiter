@@ -1,4 +1,4 @@
-import { MemoryStorage, RateLimiter } from '../src'
+import { RateLimiter } from '../src'
 
 /**
  * Advanced rate limiting example demonstrating:

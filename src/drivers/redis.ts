@@ -62,6 +62,7 @@ export class RedisStorage implements StorageProvider {
         resetTime: now + (ttl * 1000),
       }
     }
+    // eslint-disable-next-line unused-imports/no-unused-vars
     catch (error) {
       // Fallback to standard approach if LUA script fails
       return this.incrementStandard(fullKey, windowMs, now)
