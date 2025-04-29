@@ -1,5 +1,4 @@
 import type { RateLimiterOptions } from './types'
-import { createClient } from 'redis'
 import { config } from './config'
 import { MemoryStorage } from './drivers/memory'
 import { RedisStorage } from './drivers/redis'
@@ -38,12 +37,46 @@ export async function createRateLimiter(options: Partial<RateLimiterOptions> = {
   // Otherwise use configured storage
   else if (config.storage === 'redis' && config.redis) {
     try {
-      // Create Redis client from config
-      const redisClient = createClient({
-        url: config.redis.url || 'redis://localhost:6379',
-      })
+      // Create Redis client
+      let redisClient
 
-      await redisClient.connect()
+      // Check if we're running in Bun
+      if (typeof globalThis.Bun !== 'undefined') {
+        try {
+          // Try to use Bun's built-in Redis client
+          const { RedisClient } = await import('bun')
+          redisClient = new RedisClient(config.redis.url || 'redis://localhost:6379')
+          if (config.verbose) {
+            console.warn('[ts-rate-limiter] Using Bun\'s native Redis client')
+          }
+        }
+        catch (bunRedisError) {
+          if (config.verbose) {
+            console.warn('[ts-rate-limiter] Failed to use Bun\'s native Redis client:', bunRedisError)
+          }
+        }
+      }
+
+      // Fall back to standard Redis client if Bun's client isn't available
+      if (!redisClient) {
+        try {
+          const { createClient } = await import('redis')
+          redisClient = createClient({ url: config.redis.url || 'redis://localhost:6379' })
+          if (config.verbose) {
+            console.warn('[ts-rate-limiter] Using npm redis client')
+          }
+        }
+        catch (redisImportError) {
+          throw new Error(
+            `[ts-rate-limiter] Failed to import redis client. If using Bun, make sure you're using v1.2.9+ or install the redis package: ${redisImportError}`,
+          )
+        }
+      }
+
+      // Connect to Redis
+      if (typeof redisClient.connect === 'function') {
+        await redisClient.connect()
+      }
 
       finalOptions.storage = new RedisStorage({
         client: redisClient,
@@ -51,10 +84,19 @@ export async function createRateLimiter(options: Partial<RateLimiterOptions> = {
         enableSlidingWindow: config.redis.enableSlidingWindow,
       })
 
-      // Add event handler to warn on Redis errors
-      redisClient.on('error', (err) => {
-        console.error('[ts-rate-limiter] Redis error:', err.message)
-      })
+      // Handle Redis client errors based on available APIs
+      if ('onclose' in redisClient) {
+        redisClient.onclose = (error: unknown) => {
+          if (error) {
+            console.error('[ts-rate-limiter] Redis connection closed with error:', error)
+          }
+        }
+      }
+      else if ('on' in redisClient && typeof redisClient.on === 'function') {
+        redisClient.on('error', (err: Error) => {
+          console.error('[ts-rate-limiter] Redis error:', err.message)
+        })
+      }
     }
     catch (error) {
       console.warn('[ts-rate-limiter] Failed to connect to Redis, falling back to memory storage:', error)

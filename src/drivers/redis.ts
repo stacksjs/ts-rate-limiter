@@ -1,3 +1,4 @@
+import type { RedisClient } from 'bun'
 import type { RedisStorageOptions, StorageProvider } from '../types'
 import { config } from '../config'
 
@@ -5,12 +6,20 @@ import { config } from '../config'
  * Redis storage implementation with optimized performance
  */
 export class RedisStorage implements StorageProvider {
-  private client: any // Redis client
+  private client: RedisClient
   private keyPrefix: string
   private slidingWindowEnabled: boolean
   private luaScript: string
+  private isExternalClient: boolean
 
   constructor(options: RedisStorageOptions) {
+    // Store if the client was provided externally to know if we should close it on dispose
+    this.isExternalClient = !!options.client
+
+    if (!options.client) {
+      throw new Error('[ts-rate-limiter] Redis client must be provided. Initialize it and pass it to RedisStorage.')
+    }
+
     this.client = options.client
 
     // Use global config for defaults if not explicitly provided
@@ -55,16 +64,16 @@ export class RedisStorage implements StorageProvider {
       return this.incrementSlidingWindow(fullKey, windowMs, now)
     }
 
-    // Use Redis LUA script for atomic operations
+    // Try to use Redis LUA script for atomic operations
     try {
-      // Try to use EVAL command directly
-      const result = await this.client.eval(
+      // Use send method which should work on both Bun and Node Redis clients
+      const result = await this.client.send('EVAL', [
         this.luaScript,
-        {
-          keys: [fullKey],
-          arguments: [windowMs.toString(), now.toString()],
-        },
-      )
+        '1',
+        fullKey,
+        windowMs.toString(),
+        now.toString(),
+      ])
 
       // Check if result is array or single value
       const count = Array.isArray(result) ? Number(result[0]) : Number(result)
@@ -75,15 +84,17 @@ export class RedisStorage implements StorageProvider {
         resetTime: now + (ttl * 1000),
       }
     }
-    // eslint-disable-next-line unused-imports/no-unused-vars
     catch (error) {
       // Fallback to standard approach if LUA script fails
+      if (config.verbose) {
+        console.warn('[ts-rate-limiter] LUA script execution failed, using standard approach:', error)
+      }
       return this.incrementStandard(fullKey, windowMs, now)
     }
   }
 
   private async incrementStandard(fullKey: string, windowMs: number, now: number): Promise<{ count: number, resetTime: number }> {
-    // First increment the counter
+    // First increment the counter using Redis client
     const count = await this.client.incr(fullKey)
 
     // Then get the TTL
@@ -106,21 +117,31 @@ export class RedisStorage implements StorageProvider {
     const windowScore = now.toString()
     const windowExpiry = (now - windowMs).toString()
 
-    // Add current timestamp to sorted set
-    await this.client.zAdd(windowKey, { score: windowScore, value: windowScore })
+    try {
+      // Add current timestamp to sorted set
+      await this.client.send('ZADD', [windowKey, windowScore, windowScore])
 
-    // Remove timestamps outside the window
-    await this.client.zRemRangeByScore(windowKey, '0', windowExpiry)
+      // Remove timestamps outside the window
+      await this.client.send('ZREMRANGEBYSCORE', [windowKey, '0', windowExpiry])
 
-    // Count elements in the sorted set (current count in window)
-    const count = await this.client.zCard(windowKey)
+      // Count elements in the sorted set (current count in window)
+      const count = await this.client.send('ZCARD', [windowKey])
 
-    // Set expiry on the sorted set
-    await this.client.pExpire(windowKey, windowMs)
+      // Set expiry on the sorted set
+      await this.client.send('PEXPIRE', [windowKey, windowMs.toString()])
 
-    return {
-      count: Number(count),
-      resetTime: now + windowMs,
+      return {
+        count: Number(count),
+        resetTime: now + windowMs,
+      }
+    }
+    catch (error) {
+      if (config.verbose) {
+        console.warn('[ts-rate-limiter] Sliding window operation failed:', error)
+      }
+
+      // Fall back to standard approach
+      return this.incrementStandard(fullKey, windowMs, now)
     }
   }
 
@@ -128,7 +149,7 @@ export class RedisStorage implements StorageProvider {
     const fullKey = this.keyPrefix + key
 
     if (this.slidingWindowEnabled) {
-      await this.client.del([fullKey, `${fullKey}:window`])
+      await this.client.send('DEL', [fullKey, `${fullKey}:window`])
     }
     else {
       await this.client.del(fullKey)
@@ -146,54 +167,75 @@ export class RedisStorage implements StorageProvider {
       throw new Error('Sliding window not enabled for this Redis storage instance')
     }
 
-    const windowKey = `${this.keyPrefix}${key}:window`
-    const now = Date.now()
-    const windowExpiry = (now - windowMs).toString()
+    try {
+      const windowKey = `${this.keyPrefix}${key}:window`
+      const now = Date.now()
+      const windowExpiry = (now - windowMs).toString()
 
-    // Remove expired entries
-    await this.client.zRemRangeByScore(windowKey, '0', windowExpiry)
+      // Remove expired entries
+      await this.client.send('ZREMRANGEBYSCORE', [windowKey, '0', windowExpiry])
 
-    // Count remaining
-    const count = await this.client.zCard(windowKey)
+      // Count remaining
+      const count = await this.client.send('ZCARD', [windowKey])
 
-    return Number(count)
+      return Number(count)
+    }
+    catch (error) {
+      if (config.verbose) {
+        console.warn('[ts-rate-limiter] Sliding window count operation failed:', error)
+      }
+      return 0
+    }
   }
 
   async batchIncrement(keys: string[], windowMs: number): Promise<Map<string, { count: number, resetTime: number }>> {
     const results = new Map<string, { count: number, resetTime: number }>()
     const now = Date.now()
 
-    // Process each key sequentially since we don't have pipeline in this version
+    // Process each key sequentially
     for (const key of keys) {
-      const fullKey = this.keyPrefix + key
+      try {
+        const fullKey = this.keyPrefix + key
 
-      if (this.slidingWindowEnabled) {
-        const windowKey = `${fullKey}:window`
-        const windowScore = now.toString()
-        const windowExpiry = (now - windowMs).toString()
+        if (this.slidingWindowEnabled) {
+          const windowKey = `${fullKey}:window`
+          const windowScore = now.toString()
+          const windowExpiry = (now - windowMs).toString()
 
-        await this.client.zAdd(windowKey, { score: windowScore, value: windowScore })
-        await this.client.zRemRangeByScore(windowKey, '0', windowExpiry)
-        const count = await this.client.zCard(windowKey)
-        await this.client.pExpire(windowKey, windowMs)
+          await this.client.send('ZADD', [windowKey, windowScore, windowScore])
+          await this.client.send('ZREMRANGEBYSCORE', [windowKey, '0', windowExpiry])
+          const count = await this.client.send('ZCARD', [windowKey])
+          await this.client.send('PEXPIRE', [windowKey, windowMs.toString()])
 
-        results.set(key, {
-          count: Number(count),
-          resetTime: now + windowMs,
-        })
+          results.set(key, {
+            count: Number(count),
+            resetTime: now + windowMs,
+          })
+        }
+        else {
+          const count = await this.client.incr(fullKey)
+          const ttl = await this.client.ttl(fullKey)
+
+          // Set expiration if this is a new key or TTL is negative
+          if (count === 1 || ttl < 0) {
+            await this.client.expire(fullKey, Math.ceil(windowMs / 1000))
+          }
+
+          results.set(key, {
+            count: Number(count),
+            resetTime: now + (ttl > 0 ? ttl * 1000 : windowMs),
+          })
+        }
       }
-      else {
-        const count = await this.client.incr(fullKey)
-        const ttl = await this.client.ttl(fullKey)
-
-        // Set expiration if this is a new key or TTL is negative
-        if (count === 1 || ttl < 0) {
-          await this.client.expire(fullKey, Math.ceil(windowMs / 1000))
+      catch (error) {
+        if (config.verbose) {
+          console.warn(`[ts-rate-limiter] Batch increment failed for key ${key}:`, error)
         }
 
+        // Set a default value for this key
         results.set(key, {
-          count: Number(count),
-          resetTime: now + (ttl > 0 ? ttl * 1000 : windowMs),
+          count: 1,
+          resetTime: now + windowMs,
         })
       }
     }
@@ -202,6 +244,9 @@ export class RedisStorage implements StorageProvider {
   }
 
   async dispose(): Promise<void> {
-    // No need to do anything here, client is managed externally
+    // Only close the client if we created it internally
+    if (!this.isExternalClient && this.client && typeof this.client.close === 'function') {
+      this.client.close()
+    }
   }
 }
