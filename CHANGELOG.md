@@ -1,4 +1,21 @@
 
+## v0.3.1...main
+
+[compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.3.1...main)
+
+### 🏡 Chore
+
+- Adjust title ([70ac022](https://github.com/stacksjs/ts-rate-limiter/commit/70ac022))
+- Improve jsdocs ([fc1a504](https://github.com/stacksjs/ts-rate-limiter/commit/fc1a504))
+- Add stargazer and sponsors ([95d0fb5](https://github.com/stacksjs/ts-rate-limiter/commit/95d0fb5))
+- Adjust readme ([57ff195](https://github.com/stacksjs/ts-rate-limiter/commit/57ff195))
+- Properly make use Bun's RedisClient ([230a996](https://github.com/stacksjs/ts-rate-limiter/commit/230a996))
+
+### ❤️ Contributors
+
+- Chris ([@chrisbbreuer](https://github.com/chrisbbreuer))
+- Cab-mikee ([@cab-mikee](https://github.com/cab-mikee))
+
 ## v0.3.0...main
 
 [compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.3.0...main)
