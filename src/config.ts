@@ -21,8 +21,18 @@ export const defaultConfig: RateLimiterConfig = {
   },
 }
 
-// eslint-disable-next-line antfu/no-top-level-await
-export const config: RateLimiterConfig = await loadConfig({
+// Lazy-loaded config to avoid top-level await (enables bun --compile)
+let _config: RateLimiterConfig | null = null
+
+export async function getConfig(): Promise<RateLimiterConfig> {
+  if (!_config) {
+    _config = await loadConfig({
   name: 'rate-limiter',
   defaultConfig,
 })
+  }
+  return _config
+}
+
+// For backwards compatibility - synchronous access with default fallback
+export const config: RateLimiterConfig = defaultConfig
