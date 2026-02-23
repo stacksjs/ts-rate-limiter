@@ -7,11 +7,11 @@
  * compiler without requiring the package to be installed.
  */
 declare module 'redis' {
-  export function createClient(options?: {
+  export function createClient(_options?: {
     url?: string
     socket?: {
       connectTimeout?: number
-      reconnectStrategy?: false | ((retries: number) => number | Error)
+      reconnectStrategy?: false | ((_retries: number) => number | Error)
     }
   }): {
     connect: () => Promise<void>
