@@ -448,9 +448,11 @@ describe('ts-rate-limiter', () => {
       }
 
       // Ensure we can still access all keys
+      // Use deterministic, evenly-spaced indices to avoid duplicate keys
+      // which would cause the count to exceed 2
       for (let i = 0; i < 10; i++) {
-        const randomIndex = Math.floor(Math.random() * uniqueKeyCount)
-        const result = await storage.increment(`key-${randomIndex}`, windowMs)
+        const index = i * Math.floor(uniqueKeyCount / 10)
+        const result = await storage.increment(`key-${index}`, windowMs)
         expect(result.count).toBe(2) // Should increment to 2 because we already added 1
       }
 
