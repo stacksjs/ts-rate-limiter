@@ -73,7 +73,7 @@
   },
   "devDependencies": {
     "@stacksjs/docs": "^0.70.23",
-    "better-dx": "^0.2.5"
+    "better-dx": "^0.2.6"
   },
   "overrides": {
     "unconfig": "0.3.10"
