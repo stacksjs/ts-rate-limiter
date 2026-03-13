@@ -2,7 +2,7 @@
 
 ## About
 
-High-performance, flexible rate limiting for TypeScript and Bun.
+A high-performance rate limiting library for TypeScript and Bun, supporting three algorithms: Fixed Window, Sliding Window, and Token Bucket. It provides both in-memory and Redis storage backends for single-instance or distributed deployments. Key features include custom key generators, skip/handler functions, draft mode (record without blocking), standard and legacy rate limit headers, automatic cleanup of expired records, and batch operations. It integrates as middleware in Bun's `serve()` API.
 
 ## Linting
 
