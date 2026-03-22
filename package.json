@@ -74,9 +74,6 @@
   "devDependencies": {
     "better-dx": "^0.2.7"
   },
-  "overrides": {
-    "unconfig": "0.3.10"
-  },
   "git-hooks": {
     "pre-commit": {
       "stagedLint": {
