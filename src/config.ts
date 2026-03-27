@@ -2,7 +2,7 @@ import type { RateLimiterConfig } from './types'
 import { loadConfig } from 'bunfig'
 
 export const defaultConfig: RateLimiterConfig = {
-  verbose: true,
+  verbose: false,
   storage: 'memory',
   algorithm: 'fixed-window',
   windowMs: 60 * 1000, // 1 minute
