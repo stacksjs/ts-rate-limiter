@@ -34,6 +34,7 @@ Bun.serve({
 ### Middleware Behavior
 
 The middleware function:
+
 - Returns `null` if request is allowed
 - Returns `Response` (429) if rate limited
 - Adds rate limit headers to the response

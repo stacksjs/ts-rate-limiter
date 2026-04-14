@@ -29,5 +29,3 @@ features:
     icon: "🔧"
     details: "Customize key generation, response handling, and more to fit your application's needs."
 ---
-
-<Home />

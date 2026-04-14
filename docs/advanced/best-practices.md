@@ -68,7 +68,7 @@ import { RateLimiter, RedisStorage } from 'ts-rate-limiter'
 
 // Initialize Redis client
 const redisClient = createClient({
-  url: process.env.REDIS_URL || 'redis://localhost:6379',
+  url: process.env.REDIS*URL || 'redis://localhost:6379',
 })
 
 await redisClient.connect()
@@ -406,7 +406,7 @@ const limiter = new RateLimiter({
       limit: options.maxRequests,
       windowMs: options.windowMs,
       currentUsage: options.maxRequests - options.remainingRequests,
-      type: 'rate_limit_exceeded',
+      type: 'rate*limit*exceeded',
     })
   }
 })
@@ -484,7 +484,7 @@ const limiter = new RateLimiter({
   handler: (req, res, next, options) => {
     // Log rate limit exceeded events
     logger.warn({
-      type: 'rate_limit_exceeded',
+      type: 'rate*limit*exceeded',
       ip: req.ip,
       path: req.path,
       method: req.method,
@@ -500,7 +500,7 @@ const limiter = new RateLimiter({
   onLimitReached: (req, res, options) => {
     // This is called when a client first exceeds the rate limit
     logger.info({
-      type: 'rate_limit_reached',
+      type: 'rate*limit*reached',
       ip: req.ip,
       path: req.path,
       method: req.method,
@@ -521,13 +521,13 @@ import { RateLimiter } from 'ts-rate-limiter'
 
 // Create metrics
 const rateLimitCounter = new prometheus.Counter({
-  name: 'rate_limit_exceeded_total',
+  name: 'rate*limit*exceeded*total',
   help: 'Total number of requests that exceeded rate limits',
   labelNames: ['path', 'method', 'status']
 })
 
 const remainingGauge = new prometheus.Gauge({
-  name: 'rate_limit_remaining',
+  name: 'rate*limit*remaining',
   help: 'Remaining requests before hitting rate limit',
   labelNames: ['path']
 })
@@ -586,8 +586,8 @@ import { RateLimiter } from 'ts-rate-limiter'
 
 // Read limits from environment variables with generous defaults
 const limiter = new RateLimiter({
-  windowMs: Number.parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000'),
-  maxRequests: Number.parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '200'),
+  windowMs: Number.parseInt(process.env.RATE*LIMIT*WINDOW*MS || '60000'),
+  maxRequests: Number.parseInt(process.env.RATE*LIMIT*MAX*REQUESTS || '200'),
 })
 
 // Allow dynamically updating limits

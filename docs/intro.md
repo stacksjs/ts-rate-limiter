@@ -4,7 +4,7 @@
 
 `ts-rate-limiter` is a high-performance, flexible rate limiting library designed for TypeScript and Bun applications. It provides multiple rate limiting algorithms, storage providers, and customization options to help you control the rate of incoming requests to your API or application.
 
-## What is Rate Limiting?
+## What is Rate Limiting
 
 Rate limiting is a strategy used to control the amount of incoming and outgoing traffic to or from a network, API, or service. It's essential for:
 

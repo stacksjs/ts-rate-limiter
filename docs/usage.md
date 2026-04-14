@@ -101,7 +101,7 @@ import { RateLimiter } from 'ts-rate-limiter'
 
 // Create a rate limiter with 100 requests per minute
 const limiter = new RateLimiter({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 _ 1000, // 1 minute
   maxRequests: 100 // limit each IP to 100 requests per windowMs
 })
 
@@ -129,7 +129,7 @@ You can manually check if a request is rate limited without immediately returnin
 import { RateLimiter } from 'ts-rate-limiter'
 
 const limiter = new RateLimiter({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 _ 60 _ 1000, // 15 minutes
   maxRequests: 100,
 })
 
@@ -156,21 +156,21 @@ You can choose between three different rate limiting algorithms:
 ```ts
 // Fixed Window (default)
 const fixedWindowLimiter = new RateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100,
   algorithm: 'fixed-window',
 })
 
 // Sliding Window (more accurate)
 const slidingWindowLimiter = new RateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100,
   algorithm: 'sliding-window',
 })
 
 // Token Bucket (allows bursts)
 const tokenBucketLimiter = new RateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100,
   algorithm: 'token-bucket',
 })
@@ -199,7 +199,7 @@ const storage = new RedisStorage({
 
 // Create rate limiter with Redis storage
 const limiter = new RateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100,
   storage,
   algorithm: 'sliding-window'
@@ -212,7 +212,7 @@ You can customize how keys are generated, for example, to limit by user ID inste
 
 ```ts
 const userLimiter = new RateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 50,
   keyGenerator: (req) => {
     const userId = getUserIdFromRequest(req)
@@ -227,7 +227,7 @@ You can skip rate limiting for certain requests:
 
 ```ts
 const limiter = new RateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100,
   skip: (req) => {
     // Skip rate limiting for health checks and static assets
@@ -243,7 +243,7 @@ You can customize the response when rate limiting is triggered:
 
 ```ts
 const limiter = new RateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100,
   handler: (req, result) => {
     return new Response(JSON.stringify({

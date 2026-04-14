@@ -74,7 +74,7 @@ Current time: 01:30
 Window spans: [00:30 - 01:30]
               |<---- 60 seconds ---->|
 
-Weighted count = current_window_count * 0.5 + previous_window_count * 0.5
+Weighted count = current_window_count _ 0.5 + previous_window_count _ 0.5
 ```
 
 Combines counts from current and previous windows based on how much time has passed.
@@ -85,7 +85,7 @@ Combines counts from current and previous windows based on how much time has pas
 import { RateLimiter } from 'ts-rate-limiter'
 
 const limiter = new RateLimiter({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 _ 1000, // 1 minute
   maxRequests: 100,
   algorithm: 'sliding-window'
 })
@@ -101,7 +101,7 @@ At 01:30 (30 seconds into the current window):
 
 Weighted count:
 ```
-count = 40 + (60 * 0.5) = 70 requests
+count = 40 + (60 _ 0.5) = 70 requests
 ```
 
 ### Pros
@@ -231,7 +231,7 @@ Need accurate limiting?
 // Use sliding window for accurate public API limiting
 const limiter = new RateLimiter({
   algorithm: 'sliding-window',
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100
 })
 ```
@@ -242,7 +242,7 @@ const limiter = new RateLimiter({
 // Use fixed window for simple brute-force protection
 const authLimiter = new RateLimiter({
   algorithm: 'fixed-window',
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 15 _ 60 _ 1000, // 15 minutes
   maxRequests: 5
 })
 ```
@@ -253,7 +253,7 @@ const authLimiter = new RateLimiter({
 // Use token bucket to allow app launch bursts
 const mobileLimiter = new RateLimiter({
   algorithm: 'token-bucket',
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100 // Burst capacity
 })
 ```
@@ -264,7 +264,7 @@ const mobileLimiter = new RateLimiter({
 // Use token bucket for variable incoming traffic
 const webhookLimiter = new RateLimiter({
   algorithm: 'token-bucket',
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 1000
 })
 ```
@@ -322,7 +322,7 @@ async checkTokenBucket(key: string): Promise<RateLimitResult> {
   // Refill tokens
   const elapsed = now - bucket.lastRefill
   bucket.tokens = Math.min(
-    bucket.tokens + elapsed * refillRate,
+    bucket.tokens + elapsed _ refillRate,
     capacity
   )
   bucket.lastRefill = now
@@ -335,8 +335,8 @@ async checkTokenBucket(key: string): Promise<RateLimitResult> {
     allowed,
     current: capacity - Math.floor(bucket.tokens),
     limit: capacity,
-    remaining: /* time until next token */,
-    resetTime: /* when bucket will be full */
+    remaining: /_ time until next token _/,
+    resetTime: /_ when bucket will be full _/
   }
 }
 ```
@@ -361,7 +361,7 @@ class LeakyBucketStorage implements StorageProvider {
 
 const limiter = new RateLimiter({
   storage: new LeakyBucketStorage(),
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100
 })
 ```
@@ -410,7 +410,7 @@ Apply multiple rate limits with different algorithms:
 // Strict per-minute limit
 const minuteLimiter = new RateLimiter({
   algorithm: 'sliding-window',
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 60
 })
 

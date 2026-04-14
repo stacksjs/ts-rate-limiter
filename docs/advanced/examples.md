@@ -492,8 +492,8 @@ const app = express()
 // In-memory store of API keys and their limits
 // In production, this would come from a database
 const apiKeyLimits = {
-  api_key_12345: { requestsPerMinute: 100 },
-  api_key_67890: { requestsPerMinute: 1000 },
+  api*key*12345: { requestsPerMinute: 100 },
+  api*key*67890: { requestsPerMinute: 1000 },
   // Add more API keys as needed
 }
 
@@ -526,7 +526,7 @@ function getLimiterForApiKey(apiKey: string): RateLimiter {
 // Middleware to validate API key and apply rate limiting
 app.use(async (req, res, next) => {
   // Get API key from query parameter or header
-  const apiKey = req.query.api_key as string || req.headers['x-api-key'] as string
+  const apiKey = req.query.api*key as string || req.headers['x-api-key'] as string
 
   // If no API key provided, return error
   if (!apiKey) {
@@ -700,7 +700,7 @@ class EventDrivenStorage implements Storage {
 const app = express()
 
 // Create event-driven storage
-const paymentStorage = new EventDrivenStorage(eventBus, 'payment_received')
+const paymentStorage = new EventDrivenStorage(eventBus, 'payment*received')
 const limiter = new RateLimiter({
   windowMs: 60 * 1000,
   maxRequests: 10,

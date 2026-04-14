@@ -33,7 +33,7 @@ await redisClient.connect()
 
 // Create rate limiter with Redis storage
 const limiter = new RateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100,
   storage: new RedisStorage(redisClient),
 })
@@ -98,7 +98,7 @@ const redisCluster = createCluster({
   ],
   defaults: {
     socket: {
-      reconnectStrategy: retries => Math.min(retries * 50, 1000),
+      reconnectStrategy: retries => Math.min(retries _ 50, 1000),
     },
   },
 })
@@ -106,7 +106,7 @@ const redisCluster = createCluster({
 await redisCluster.connect()
 
 const limiter = new RateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100,
   storage: new RedisStorage(redisCluster),
 })
@@ -121,7 +121,7 @@ import { RateLimiter, RedisStorage } from 'ts-rate-limiter'
 const redisClient = createClient({
   url: 'redis://my-main',
   socket: {
-    reconnectStrategy: retries => Math.min(retries * 50, 1000),
+    reconnectStrategy: retries => Math.min(retries _ 50, 1000),
   },
   sentinels: [
     { host: 'sentinel-1', port: 26379 },
@@ -185,7 +185,7 @@ class PooledRedisStorage extends RedisStorage {
 }
 
 const limiter = new RateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100,
   storage: new PooledRedisStorage(),
 })
@@ -291,7 +291,7 @@ class FailoverStorage {
 
 // Create rate limiter with failover storage
 const limiter = new RateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100,
   storage: new FailoverStorage(redisStorage, memoryStorage),
 })
@@ -318,7 +318,7 @@ import { RateLimiter, RedisStorage } from 'ts-rate-limiter'
 const redisClient = createClient({
   url: process.env.REDIS_URL || 'redis://localhost:6379',
   socket: {
-    reconnectStrategy: retries => Math.min(retries * 50, 1000),
+    reconnectStrategy: retries => Math.min(retries _ 50, 1000),
   },
 })
 
@@ -335,7 +335,7 @@ await redisClient.connect()
 
 // Create rate limiter with Redis storage
 const apiLimiter = new RateLimiter({
-  windowMs: 60 * 1000,
+  windowMs: 60 _ 1000,
   maxRequests: 100,
   storage: new RedisStorage(redisClient),
   // Custom key generation based on authentication
