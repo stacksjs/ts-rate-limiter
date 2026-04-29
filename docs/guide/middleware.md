@@ -230,7 +230,7 @@ const userLimiter = new RateLimiter({
   maxRequests: 100,
   keyGenerator: async (request) => {
     // Extract user from JWT
-    const token = request.headers.get('Authorization')?.split(' ')[1]
+    const token = request.headers.get('Authorization')?.split(' ').at(1)
     if (token) {
       const payload = await verifyJWT(token)
       return `user:${payload.sub}`

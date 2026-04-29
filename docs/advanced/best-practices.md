@@ -248,7 +248,7 @@ const limiter = new RateLimiter({
   keyGenerator: (req) => {
     // Check for trusted proxy configuration
     const ip = req.headers['x-forwarded-for']
-      ? req.headers['x-forwarded-for'].split(',')[0].trim()
+      ? req.headers['x-forwarded-for'].split(',').at(0).trim()
       : (req.socket.remoteAddress || '0.0.0.0')
 
     // Combine with user agent to prevent single IP from creating multiple identities
