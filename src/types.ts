@@ -375,7 +375,7 @@ export interface RateLimiterOptions {
   /**
    * Function to extract identifier from request.
    * Default: Client IP address from various headers or socket
-   * Custom function can use any request property (path, auth, etc.)
+   * Custom function can use any request property (_path, _auth, etc.)
    * @default IP address extractor
    * @example
    * ```ts
