@@ -273,6 +273,51 @@ export class RateLimiter {
   }
 
   /**
+   * Read the current state for a key without consuming a token.
+   *
+   * Useful for "you have N attempts remaining" UI hints, dashboards,
+   * and pre-flight checks where you want to surface the limit without
+   * actually using one of the slots.
+   *
+   * Falls back to the storage provider's optional `getCount` when
+   * available; otherwise returns `null` to signal "not introspectable".
+   */
+  async peek(key: string): Promise<RateLimitResult | null> {
+    if (typeof this.storage.getCount !== 'function') return null
+    const count = await this.storage.getCount(key)
+    const now = Date.now()
+    return {
+      allowed: this.draftMode ? true : count < this.maxRequests,
+      current: count,
+      limit: this.maxRequests,
+      remaining: this.windowMs,
+      resetTime: now + this.windowMs,
+    }
+  }
+
+  /**
+   * Consume a token and throw `RateLimitError` if the request would
+   * exceed the configured limit. Designed for action-level call sites
+   * that want a single line of code to gate expensive work:
+   *
+   * ```ts
+   * await limiter.enforce(`login:${email}`)
+   * // …only reachable if the limit hasn't been hit
+   * ```
+   *
+   * The error carries `retryAfter` (in seconds) and the underlying
+   * `result` so framework adapters can build their own 429 responses
+   * with the correct headers.
+   */
+  async enforce(key: string): Promise<RateLimitResult> {
+    const result = await this.consume(key)
+    if (!result.allowed) {
+      throw new RateLimitError(`Rate limit exceeded for '${key}'`, result)
+    }
+    return result
+  }
+
+  /**
    * Reset the counter for a key
    */
   async reset(key: string): Promise<void> {
@@ -362,4 +407,80 @@ export class RateLimiter {
 
     this.tokenBuckets.clear()
   }
+}
+
+/**
+ * Error thrown by `RateLimiter.enforce(...)` when the bucket is full.
+ *
+ * Subclasses `Error` so it survives a `JSON.stringify` round-trip on
+ * the wire (frameworks that auto-serialize thrown errors will get the
+ * `name`, `message`, `retryAfter`, and `result` fields out of the box).
+ *
+ * Carries a numeric `retryAfter` (in **seconds**, matching the HTTP
+ * `Retry-After` header convention) and the underlying `RateLimitResult`
+ * so adapters can build a richer 429 response (Retry-After header,
+ * `RateLimit-Remaining`, body fields, etc.) without re-running the
+ * limiter to recover the data.
+ */
+export class RateLimitError extends Error {
+  override readonly name = 'RateLimitError'
+  readonly retryAfter: number
+  readonly result: RateLimitResult
+
+  constructor(message: string, result: RateLimitResult) {
+    super(message)
+    this.result = result
+    this.retryAfter = Math.max(1, Math.ceil(result.remaining / 1000))
+  }
+
+  /**
+   * Build a typed Headers object that adapters can merge into a 429
+   * Response. Mirrors the shape produced by the middleware path.
+   */
+  toHeaders(): Record<string, string> {
+    return {
+      'Retry-After': String(this.retryAfter),
+      'RateLimit-Limit': String(this.result.limit),
+      'RateLimit-Remaining': '0',
+      'RateLimit-Reset': String(Math.ceil(this.result.resetTime / 1000)),
+    }
+  }
+}
+
+/**
+ * Extract a stable rate-limit identity from a request. The default
+ * key generator only handles IPs, but most apps want to bucket by
+ * authenticated user where possible and fall back to IP otherwise.
+ *
+ * Prefers (in order):
+ *   1. `request._authenticatedUser.id` (set by auth middleware)
+ *   2. `request._currentAccessToken.id`
+ *   3. `Authorization: Bearer <token>`
+ *   4. `x-forwarded-for` (first hop)
+ *   5. `x-real-ip`
+ *   6. `'anon'`
+ *
+ * Returning a stable string per "actor" means a single user behind a
+ * shared NAT can't trip the bucket for everyone else on the same IP.
+ */
+export function defaultIdentity(request: Request): string {
+  const r = request as Request & {
+    _authenticatedUser?: { id?: string | number }
+    _currentAccessToken?: { id?: string | number }
+  }
+  const userId = r._authenticatedUser?.id
+  if (userId !== undefined) return `user:${String(userId)}`
+  const tokenId = r._currentAccessToken?.id
+  if (tokenId !== undefined) return `token:${String(tokenId)}`
+
+  const auth = request.headers.get('authorization')
+  if (auth?.startsWith('Bearer ')) return `bearer:${auth.slice(7, 39)}` // hash-safe prefix
+
+  const forwarded = request.headers.get('x-forwarded-for')
+  if (forwarded) return `ip:${forwarded.split(',')[0]?.trim() ?? 'unknown'}`
+
+  const realIp = request.headers.get('x-real-ip')
+  if (realIp) return `ip:${realIp}`
+
+  return 'anon'
 }
