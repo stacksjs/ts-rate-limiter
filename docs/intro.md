@@ -120,4 +120,3 @@ Made with 💙
 <!-- Badges -->
 
 <!-- [codecov-src]: https://img.shields.io/codecov/c/gh/stacksjs/qrx/main?style=flat-square
-[codecov-href]: https://codecov.io/gh/stacksjs/qrx -->
