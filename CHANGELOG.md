@@ -1,3 +1,68 @@
+[Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.1...v0.4.2)
+
+### 🚀 Features
+
+- add enforce/peek helpers + RateLimitError + defaultIdentity ([b675e82](https://github.com/stacksjs/ts-rate-limiter/commit/b675e82)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🐛 Bug Fixes
+
+- add setup-bun to publish-commit job ([3eb0707](https://github.com/stacksjs/ts-rate-limiter/commit/3eb0707)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### 🤖 Continuous Integration
+
+- drop redundant setup-bun (pantry installs bun via deps.yaml) ([4ffc91d](https://github.com/stacksjs/ts-rate-limiter/commit/4ffc91d)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### 🧹 Chores
+
+- release v0.4.2 ([1df6055](https://github.com/stacksjs/ts-rate-limiter/commit/1df6055)) _(by Chris <chrisbreuer93@gmail.com>)_
+- refresh bun.lock and apply pickier --fix ([7c4a853](https://github.com/stacksjs/ts-rate-limiter/commit/7c4a853)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- refresh bun.lock ([edf10ef](https://github.com/stacksjs/ts-rate-limiter/commit/edf10ef)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- lint:fix ([a72aab3](https://github.com/stacksjs/ts-rate-limiter/commit/a72aab3)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- refresh bun.lock to pick up latest pickier ([1c8d803](https://github.com/stacksjs/ts-rate-limiter/commit/1c8d803)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix lint errors ([244b43d](https://github.com/stacksjs/ts-rate-limiter/commit/244b43d)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fresh install to pick up dtsx 0.9.14 and bunfig 0.15.9 ([dda14de](https://github.com/stacksjs/ts-rate-limiter/commit/dda14de)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fresh install to pick up pickier 0.1.21 ([8c7564c](https://github.com/stacksjs/ts-rate-limiter/commit/8c7564c)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- gitignore pantry directory ([4cf0d25](https://github.com/stacksjs/ts-rate-limiter/commit/4cf0d25)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- auto-fix lint errors ([7fdef50](https://github.com/stacksjs/ts-rate-limiter/commit/7fdef50)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- include md in pickier lint extensions ([5471ce4](https://github.com/stacksjs/ts-rate-limiter/commit/5471ce4)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
+[Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.1...HEAD)
+
+### 🚀 Features
+
+- add enforce/peek helpers + RateLimitError + defaultIdentity ([b675e82](https://github.com/stacksjs/ts-rate-limiter/commit/b675e82)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+### 🐛 Bug Fixes
+
+- add setup-bun to publish-commit job ([3eb0707](https://github.com/stacksjs/ts-rate-limiter/commit/3eb0707)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### 🤖 Continuous Integration
+
+- drop redundant setup-bun (pantry installs bun via deps.yaml) ([4ffc91d](https://github.com/stacksjs/ts-rate-limiter/commit/4ffc91d)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### 🧹 Chores
+
+- refresh bun.lock and apply pickier --fix ([7c4a853](https://github.com/stacksjs/ts-rate-limiter/commit/7c4a853)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- refresh bun.lock ([edf10ef](https://github.com/stacksjs/ts-rate-limiter/commit/edf10ef)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- lint:fix ([a72aab3](https://github.com/stacksjs/ts-rate-limiter/commit/a72aab3)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- refresh bun.lock to pick up latest pickier ([1c8d803](https://github.com/stacksjs/ts-rate-limiter/commit/1c8d803)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fix lint errors ([244b43d](https://github.com/stacksjs/ts-rate-limiter/commit/244b43d)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fresh install to pick up dtsx 0.9.14 and bunfig 0.15.9 ([dda14de](https://github.com/stacksjs/ts-rate-limiter/commit/dda14de)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- fresh install to pick up pickier 0.1.21 ([8c7564c](https://github.com/stacksjs/ts-rate-limiter/commit/8c7564c)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- gitignore pantry directory ([4cf0d25](https://github.com/stacksjs/ts-rate-limiter/commit/4cf0d25)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- auto-fix lint errors ([7fdef50](https://github.com/stacksjs/ts-rate-limiter/commit/7fdef50)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+- include md in pickier lint extensions ([5471ce4](https://github.com/stacksjs/ts-rate-limiter/commit/5471ce4)) _(by glennmichael123 <gtorregosa@gmail.com>)_
+
+### Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+- _glennmichael123 <gtorregosa@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.0...v0.4.1)
 
 ### 🧹 Chores
