@@ -10,7 +10,13 @@ export class RedisStorage implements StorageProvider {
   private keyPrefix: string
   private slidingWindowEnabled: boolean
   private luaScript: string
+  private slidingWindowScript: string
   private isExternalClient: boolean
+  // Monotonic counter to guarantee unique sorted-set members even when many
+  // requests land in the same millisecond (using the raw timestamp as the
+  // member would collide and silently under-count, letting clients exceed the
+  // limit). The score stays the timestamp so window trimming still works.
+  private slidingWindowSeq = 0
 
   constructor(options: RedisStorageOptions) {
     // Store if the client was provided externally to know if we should close it on dispose
@@ -46,6 +52,23 @@ export class RedisStorage implements StorageProvider {
       end
 
       return {count, ttl}
+    `
+
+    // Atomic sliding-window operation. Doing ZADD/ZREMRANGEBYSCORE/ZCARD/PEXPIRE
+    // as separate round-trips lets concurrent requests interleave and bypass the
+    // limit; running them in one Lua script makes the read-modify-write atomic.
+    this.slidingWindowScript = `
+      local key = KEYS[1]
+      local now = tonumber(ARGV[1])
+      local window = tonumber(ARGV[2])
+      local member = ARGV[3]
+
+      redis.call('ZADD', key, now, member)
+      redis.call('ZREMRANGEBYSCORE', key, '0', now - window)
+      local count = redis.call('ZCARD', key)
+      redis.call('PEXPIRE', key, window)
+
+      return count
     `
 
     // Verbose logging if enabled
@@ -114,21 +137,19 @@ export class RedisStorage implements StorageProvider {
 
   private async incrementSlidingWindow(fullKey: string, windowMs: number, now: number): Promise<{ count: number, resetTime: number }> {
     const windowKey = `${fullKey}:window`
-    const windowScore = now.toString()
-    const windowExpiry = (now - windowMs).toString()
+    // Unique member: timestamp + monotonic sequence so same-millisecond
+    // requests don't overwrite each other in the sorted set.
+    const member = `${now}-${this.slidingWindowSeq = (this.slidingWindowSeq + 1) % Number.MAX_SAFE_INTEGER}`
 
     try {
-      // Add current timestamp to sorted set
-      await this.client.send('ZADD', [windowKey, windowScore, windowScore])
-
-      // Remove timestamps outside the window
-      await this.client.send('ZREMRANGEBYSCORE', [windowKey, '0', windowExpiry])
-
-      // Count elements in the sorted set (current count in window)
-      const count = await this.client.send('ZCARD', [windowKey])
-
-      // Set expiry on the sorted set
-      await this.client.send('PEXPIRE', [windowKey, windowMs.toString()])
+      const count = await this.client.send('EVAL', [
+        this.slidingWindowScript,
+        '1',
+        windowKey,
+        now.toString(),
+        windowMs.toString(),
+        member,
+      ])
 
       return {
         count: Number(count),
@@ -199,13 +220,16 @@ export class RedisStorage implements StorageProvider {
 
         if (this.slidingWindowEnabled) {
           const windowKey = `${fullKey}:window`
-          const windowScore = now.toString()
-          const windowExpiry = (now - windowMs).toString()
+          const member = `${now}-${this.slidingWindowSeq = (this.slidingWindowSeq + 1) % Number.MAX_SAFE_INTEGER}`
 
-          await this.client.send('ZADD', [windowKey, windowScore, windowScore])
-          await this.client.send('ZREMRANGEBYSCORE', [windowKey, '0', windowExpiry])
-          const count = await this.client.send('ZCARD', [windowKey])
-          await this.client.send('PEXPIRE', [windowKey, windowMs.toString()])
+          const count = await this.client.send('EVAL', [
+            this.slidingWindowScript,
+            '1',
+            windowKey,
+            now.toString(),
+            windowMs.toString(),
+            member,
+          ])
 
           results.set(key, {
             count: Number(count),

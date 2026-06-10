@@ -10,10 +10,17 @@ export class MemoryStorage implements StorageProvider {
   private cleanupTimer: NodeJS.Timeout | null
   private enableAutoCleanup: boolean
   private cleanupIntervalMs: number
+  // Only track per-request timestamps once the sliding-window count has been
+  // requested. For fixed-window / token-bucket the timestamps array is never
+  // read, so recording one entry per request is pure unbounded memory growth
+  // (a DoS vector for a busy key). We lazily enable it on first sliding-window
+  // use so existing callers keep working.
+  private trackTimestamps: boolean
 
   constructor(options?: MemoryStorageOptions) {
     this.records = new Map()
     this.timestamps = new Map()
+    this.trackTimestamps = false
 
     // Use config defaults if options not provided
     const defaultConfig = config.memoryStorage || {}
@@ -38,17 +45,24 @@ export class MemoryStorage implements StorageProvider {
         resetTime: now + windowMs,
       }
       this.records.set(key, newRecord)
-      this.timestamps.set(key, [now])
+      if (this.trackTimestamps)
+        this.timestamps.set(key, [now])
       return newRecord
     }
 
     // Update existing record
     record.count += 1
 
-    // Store request timestamp for sliding window if needed
-    const timestamps = this.timestamps.get(key) || []
-    timestamps.push(now)
-    this.timestamps.set(key, timestamps)
+    // Store request timestamp for sliding window, trimming entries that have
+    // already fallen out of the window so the array stays bounded to the
+    // window size instead of growing for the lifetime of the key.
+    if (this.trackTimestamps) {
+      const windowStart = now - windowMs
+      const existing = this.timestamps.get(key)
+      const timestamps = existing ? existing.filter(time => time > windowStart) : []
+      timestamps.push(now)
+      this.timestamps.set(key, timestamps)
+    }
 
     return record
   }
@@ -64,6 +78,21 @@ export class MemoryStorage implements StorageProvider {
   }
 
   async getSlidingWindowCount(key: string, windowMs: number): Promise<number> {
+    // Enabling timestamp tracking on first sliding-window use means the common
+    // fixed-window / token-bucket paths never pay the unbounded-memory cost.
+    if (!this.trackTimestamps) {
+      this.trackTimestamps = true
+      // Seed from the current record so requests that were incremented before
+      // tracking was enabled are still counted in this window. The record's
+      // count reflects requests within the (not-yet-expired) window, so we
+      // approximate their timestamps as "now" — they are all in-window.
+      const record = this.records.get(key)
+      if (record && !this.timestamps.has(key)) {
+        const now = Date.now()
+        this.timestamps.set(key, Array.from({ length: record.count }, () => now))
+      }
+    }
+
     const timestamps = this.timestamps.get(key) || []
     const now = Date.now()
     const windowStart = now - windowMs

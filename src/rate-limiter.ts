@@ -235,12 +235,48 @@ export class RateLimiter {
       ? this.windowMs
       : Math.ceil(1 / this.tokenBucketOptions.refillRate)
 
+    // Opportunistically evict idle, fully-refilled buckets so the Map stays
+    // bounded. Without this, every distinct key (e.g. a flood of spoofed IPs)
+    // permanently occupies a Map entry — a key-exhaustion DoS vector. A bucket
+    // that has refilled back to capacity is indistinguishable from a freshly
+    // created one, so dropping it is safe: the next request recreates it full.
+    this.evictIdleTokenBuckets(now)
+
     return {
       allowed,
       current: this.tokenBucketOptions.capacity - Math.floor(bucket.tokens),
       limit: this.tokenBucketOptions.capacity,
       remaining: msUntilNextToken,
       resetTime: now + msUntilNextToken,
+    }
+  }
+
+  // How many distinct token-bucket keys to inspect per request when sweeping
+  // for idle, fully-refilled buckets. Amortizes eviction cost across requests
+  // so a single call never walks the whole Map.
+  private static readonly TOKEN_BUCKET_SWEEP_BATCH = 16
+
+  /**
+   * Evict token buckets that have been idle long enough to have fully refilled
+   * back to capacity. Such a bucket is equivalent to a fresh one, so removing it
+   * frees memory without changing future behavior. Walks at most a small batch
+   * of keys per call to keep the hot path cheap.
+   */
+  private evictIdleTokenBuckets(now: number): void {
+    if (!this.tokenBucketOptions || this.tokenBuckets.size === 0)
+      return
+
+    const refillRate = this.tokenBucketOptions.refillRate
+    const capacity = this.tokenBucketOptions.capacity
+    let inspected = 0
+
+    for (const [key, bucket] of this.tokenBuckets) {
+      if (inspected++ >= RateLimiter.TOKEN_BUCKET_SWEEP_BATCH)
+        break
+
+      const refilled = bucket.tokens + (now - bucket.lastRefill) * refillRate
+      if (refilled >= capacity)
+        this.tokenBuckets.delete(key)
     }
   }
 

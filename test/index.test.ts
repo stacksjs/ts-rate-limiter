@@ -1,6 +1,6 @@
 import type { RateLimitResult } from '../src/types'
 import { afterEach, beforeEach, describe, expect, it } from 'bun:test'
-import { MemoryStorage, RateLimiter } from '../src'
+import { MemoryStorage, RateLimiter, RedisStorage } from '../src'
 
 describe('ts-rate-limiter', () => {
   describe('MemoryStorage', () => {
@@ -75,6 +75,40 @@ describe('ts-rate-limiter', () => {
       expect(results.get('key1')?.count).toBe(1)
       expect(results.get('key2')?.count).toBe(1)
       expect(results.get('key3')?.count).toBe(1)
+    })
+
+    it('should not allocate per-request timestamps when sliding window is never used', async () => {
+      const key = 'fixed-only'
+      const windowMs = 10000
+
+      for (let i = 0; i < 50; i++)
+        await storage.increment(key, windowMs)
+
+      // No sliding-window call was made, so the timestamps map must stay empty
+      // (otherwise a busy key grows the array unboundedly: a DoS vector).
+      const timestamps = (storage as unknown as { timestamps: Map<string, number[]> }).timestamps
+      expect(timestamps.has(key)).toBe(false)
+    })
+
+    it('should bound sliding-window timestamps to the active window', async () => {
+      const key = 'sliding-bound'
+      const windowMs = 30
+
+      // Enable tracking and generate entries.
+      await storage.increment(key, windowMs)
+      await storage.getSlidingWindowCount!(key, windowMs)
+      await storage.increment(key, windowMs)
+      await storage.increment(key, windowMs)
+
+      // Wait for the window to pass, then add a fresh entry. The increment must
+      // drop the stale timestamps rather than accumulate them forever.
+      await new Promise(resolve => setTimeout(resolve, 50))
+      await storage.increment(key, windowMs)
+
+      const timestamps = (storage as unknown as { timestamps: Map<string, number[]> }).timestamps.get(key)!
+      expect(timestamps.length).toBe(1)
+      const count = await storage.getSlidingWindowCount!(key, windowMs)
+      expect(count).toBe(1)
     })
   })
 
@@ -303,6 +337,30 @@ describe('ts-rate-limiter', () => {
       // Should be allowed again
       const result = await rateLimiter.check(mockRequest)
       expect(result.allowed).toBe(true)
+    })
+
+    it('should evict idle fully-refilled buckets to bound memory', async () => {
+      // Fast refill so an idle bucket returns to full capacity quickly.
+      const limiter = new RateLimiter({
+        windowMs: 50,
+        maxRequests: 2,
+        algorithm: 'token-bucket',
+      })
+      const buckets = (limiter as unknown as { tokenBuckets: Map<string, unknown> }).tokenBuckets
+
+      const reqA = new Request('https://example.com', { headers: { 'x-forwarded-for': '1.1.1.1' } })
+      await limiter.check(reqA)
+      expect(buckets.has('1.1.1.1')).toBe(true)
+
+      // Idle key A long enough to fully refill, then drive traffic on a
+      // different key. The sweep on B's request should evict the idle A bucket
+      // so the Map does not grow without bound across many distinct keys.
+      await new Promise(resolve => setTimeout(resolve, 80))
+      const reqB = new Request('https://example.com', { headers: { 'x-forwarded-for': '2.2.2.2' } })
+      await limiter.check(reqB)
+      expect(buckets.has('1.1.1.1')).toBe(false)
+
+      limiter.dispose()
     })
   })
 
@@ -844,6 +902,73 @@ describe('ts-rate-limiter', () => {
 
       rateLimiter.dispose()
       customLimiter.dispose()
+    })
+  })
+
+  describe('RedisStorage sliding window', () => {
+    // Minimal in-memory Redis mock supporting the subset of commands the
+    // sliding-window Lua script relies on, so we can assert the storage layer's
+    // behavior without a real Redis server.
+    function makeMockRedis() {
+      const zsets = new Map<string, Map<string, number>>()
+
+      function getZset(key: string) {
+        let z = zsets.get(key)
+        if (!z) {
+          z = new Map()
+          zsets.set(key, z)
+        }
+        return z
+      }
+
+      return {
+        zsets,
+        async send(cmd: string, args: string[]): Promise<unknown> {
+          if (cmd !== 'EVAL')
+            throw new Error(`unexpected command ${cmd}`)
+
+          // args: [script, numKeys, key, now, window, member]
+          const key = args[2]
+          const now = Number(args[3])
+          const window = Number(args[4])
+          const member = args[5]
+          const z = getZset(key)
+
+          // ZADD
+          z.set(member, now)
+          // ZREMRANGEBYSCORE key 0 (now-window)
+          const cutoff = now - window
+          for (const [m, score] of z) {
+            if (score <= cutoff)
+              z.delete(m)
+          }
+          // ZCARD
+          return z.size
+        },
+      }
+    }
+
+    it('counts same-millisecond requests distinctly (no member collision)', async () => {
+      const client = makeMockRedis()
+      const storage = new RedisStorage({ client, enableSlidingWindow: true })
+
+      // Freeze the clock so every request lands in the same millisecond — the
+      // previous implementation used the timestamp as the ZSET member, so these
+      // would collide and under-count, silently bypassing the limit.
+      const realNow = Date.now
+      const fixed = realNow()
+      Date.now = () => fixed
+      try {
+        const r1 = await storage.increment('key', 1000)
+        const r2 = await storage.increment('key', 1000)
+        const r3 = await storage.increment('key', 1000)
+        expect(r1.count).toBe(1)
+        expect(r2.count).toBe(2)
+        expect(r3.count).toBe(3)
+      }
+      finally {
+        Date.now = realNow
+      }
     })
   })
 })
