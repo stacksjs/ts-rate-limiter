@@ -76,7 +76,7 @@
     "format:fix": "bunx --bun pickier . --format --write"
   },
   "devDependencies": {
-    "better-dx": "^0.2.15"
+    "better-dx": "^0.2.22"
   },
   "git-hooks": {
     "pre-commit": {
