@@ -1,3 +1,18 @@
+[Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.4...v0.4.5)
+
+## 📚 Documentation
+
+- link the community as stacksjs.com/discord ([298d985](https://github.com/stacksjs/ts-rate-limiter/commit/298d985)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.4.5 ([fd4a872](https://github.com/stacksjs/ts-rate-limiter/commit/fd4a872)) _(by Chris <chrisbreuer93@gmail.com>)_
+- **deps**: declare bun ^1.3.14 in deps.yaml ([d188844](https://github.com/stacksjs/ts-rate-limiter/commit/d188844)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.1...v0.4.2)
 
 ### 🚀 Features

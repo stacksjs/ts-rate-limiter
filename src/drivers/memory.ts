@@ -144,10 +144,24 @@ export class MemoryStorage implements StorageProvider {
   dispose(): void {
     if (this.cleanupTimer) {
       clearInterval(this.cleanupTimer)
+      this.cleanupTimer = null
     }
   }
 
   private startCleanupTimer(): void {
     this.cleanupTimer = setInterval(() => this.cleanExpired(), this.cleanupIntervalMs)
+
+    // An interval keeps the event loop alive on its own, so a limiter created
+    // anywhere in a script or a test run stops that process from ever exiting -
+    // no output, no error, just a hang, and nothing pointing at a rate limiter
+    // as the cause. Unref'd, the sweep still runs for as long as there is other
+    // work and stops mattering the moment there is not.
+    //
+    // Guarded because `unref` is a Node and Bun timer method: in a browser or a
+    // worker, setInterval returns a number and there is no event loop to hold
+    // open in the first place.
+    const timer = this.cleanupTimer as unknown as { unref?: () => void }
+    if (typeof timer?.unref === 'function')
+      timer.unref()
   }
 }
