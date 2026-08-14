@@ -1,5 +1,9 @@
 [Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.4...v0.4.5)
 
+## 🐞 Fixes
+
+- **memory**: unref the cleanup timer, so a limiter can no longer keep a process alive. `MemoryStorage` with auto-cleanup starts a `setInterval`, and an interval holds the event loop open by itself: any script or test run that constructed one never exited, with no output and nothing pointing at a rate limiter as the cause. `dispose()` now clears the handle too, so disposing twice is safe. ([c59b8ef](https://github.com/stacksjs/ts-rate-limiter/commit/c59b8ef)) _(by Chris <chrisbreuer93@gmail.com>)_
+
 ## 📚 Documentation
 
 - link the community as stacksjs.com/discord ([298d985](https://github.com/stacksjs/ts-rate-limiter/commit/298d985)) _(by Chris <chrisbreuer93@gmail.com>)_
