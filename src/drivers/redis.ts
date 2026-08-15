@@ -166,6 +166,24 @@ export class RedisStorage implements StorageProvider {
     }
   }
 
+  /**
+   * Record a request and return its own position in the window.
+   *
+   * The work was already atomic - the Lua script adds this member, trims the
+   * window and returns ZCARD in one round trip, so concurrent callers are
+   * serialised by Redis and each gets its own number. What was missing was a
+   * way for the limiter to ASK for that number: it incremented through one
+   * call and read the count through a second, and under a burst every caller
+   * finished the first before any reached the second, so all of them read the
+   * post-burst total and all were refused.
+   */
+  async consumeSlidingWindow(key: string, windowMs: number): Promise<{ count: number, resetTime: number }> {
+    if (!this.slidingWindowEnabled)
+      throw new Error('Sliding window not enabled for this Redis storage instance')
+
+    return this.incrementSlidingWindow(this.keyPrefix + key, windowMs, Date.now())
+  }
+
   async reset(key: string): Promise<void> {
     const fullKey = this.keyPrefix + key
 

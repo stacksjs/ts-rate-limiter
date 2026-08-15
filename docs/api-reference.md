@@ -208,6 +208,32 @@ async getSlidingWindowCount(key: string, windowMs: number): Promise<number>
 
 - `Promise<number>` - The current count using sliding window
 
+##### consumeSlidingWindow
+
+Records a request and returns **its own position** in the sliding window. This is
+what the sliding-window algorithm calls; `getSlidingWindowCount` is the read-only
+companion and the fallback for providers that predate this method.
+
+```ts
+async consumeSlidingWindow(key: string, windowMs: number): Promise<{ count: number, resetTime: number }>
+```
+
+Implement it as a **single atomic step**. Recording through one call and counting
+through another leaves an await between them, and under a burst every concurrent
+caller records before any of them counts. They then all read the same post-burst
+total and all are refused, so a limiter set to 120 admits none of 180 simultaneous
+requests. In-memory storage gets atomicity from not awaiting mid-method; Redis
+needs a script or a transaction.
+
+**Parameters:**
+
+- `key`: `string` - The identifier
+- `windowMs`: `number` - Time window in milliseconds
+
+**Returns:**
+
+- `Promise<{ count, resetTime }>` - This request's position in the window, and when the window clears
+
 ##### batchIncrement
 
 Increments multiple keys in a batch operation.

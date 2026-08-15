@@ -101,6 +101,46 @@ export class MemoryStorage implements StorageProvider {
     return timestamps.filter(time => time > windowStart).length
   }
 
+  /**
+   * Record a request and return its own position in the window.
+   *
+   * Atomic by construction: nothing is awaited between reading the window and
+   * writing this request into it, so a burst of concurrent callers is handed
+   * 1, 2, 3 … in turn. Doing the same work as two awaited calls hands every one
+   * of them the post-burst total instead, and a limiter of 120 then refuses all
+   * 180 simultaneous requests rather than the 60 over its ceiling.
+   */
+  async consumeSlidingWindow(key: string, windowMs: number): Promise<{ count: number, resetTime: number }> {
+    // Same lazy enable as getSlidingWindowCount: the fixed-window and
+    // token-bucket paths never pay for timestamp tracking they do not use.
+    if (!this.trackTimestamps) {
+      this.trackTimestamps = true
+      const record = this.records.get(key)
+      if (record && !this.timestamps.has(key)) {
+        const seededAt = Date.now()
+        this.timestamps.set(key, Array.from({ length: record.count }, () => seededAt))
+      }
+    }
+
+    const now = Date.now()
+    const windowStart = now - windowMs
+    const existing = this.timestamps.get(key)
+    const timestamps = existing ? existing.filter(time => time > windowStart) : []
+
+    timestamps.push(now)
+    this.timestamps.set(key, timestamps)
+
+    // The record is kept in step so `getCount`, cleanup and the fixed-window
+    // path still see this request.
+    const record = this.records.get(key)
+    if (!record || now > record.resetTime)
+      this.records.set(key, { count: 1, resetTime: now + windowMs })
+    else
+      record.count += 1
+
+    return { count: timestamps.length, resetTime: now + windowMs }
+  }
+
   async batchIncrement(keys: string[], windowMs: number): Promise<Map<string, { count: number, resetTime: number }>> {
     const results = new Map<string, { count: number, resetTime: number }>()
 

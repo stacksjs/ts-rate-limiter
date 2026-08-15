@@ -170,13 +170,31 @@ export class RateLimiter {
    * Check using sliding window algorithm
    */
   private async checkSlidingWindow(key: string): Promise<RateLimitResult> {
-    if (!this.storage.getSlidingWindowCount) {
+    if (!this.storage.getSlidingWindowCount && !this.storage.consumeSlidingWindow) {
       // Fallback to fixed window if sliding window not supported
       return this.checkFixedWindow(key)
     }
 
-    await this.storage.increment(key, this.windowMs)
-    const count = await this.storage.getSlidingWindowCount(key, this.windowMs)
+    let count: number
+
+    if (this.storage.consumeSlidingWindow) {
+      // One atomic step, so this request is judged on its own position in the
+      // window rather than on the total after every other in-flight request
+      // has also been recorded. See the two-step path below for what that
+      // costs.
+      count = (await this.storage.consumeSlidingWindow(key, this.windowMs)).count
+    }
+    else {
+      // The compatibility path, for a storage provider written before
+      // `consumeSlidingWindow` existed. It is correct when requests arrive one
+      // at a time and wrong when they do not: the two awaits let concurrent
+      // callers all record first and all read afterwards, so each sees the
+      // post-burst total and each is refused. Providers should implement the
+      // atomic method.
+      await this.storage.increment(key, this.windowMs)
+      count = await this.storage.getSlidingWindowCount!(key, this.windowMs)
+    }
+
     const now = Date.now()
     const resetTime = now + this.windowMs
     const allowed = this.draftMode ? true : count <= this.maxRequests

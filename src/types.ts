@@ -250,6 +250,31 @@ export interface StorageProvider {
   getSlidingWindowCount?: (key: string, windowMs: number) => Promise<number>
 
   /**
+   * Record a request and return ITS OWN position in the sliding window.
+   *
+   * The reason this exists rather than calling `increment` then
+   * `getSlidingWindowCount`: those are two awaited steps, and under a burst
+   * every concurrent caller finishes step one before any of them reaches step
+   * two. They then all read the same post-burst total and every one of them is
+   * refused - a limiter set to 120 admitting none of 180 simultaneous
+   * requests, which is the exact traffic shape a rate limiter exists for.
+   *
+   * Implementations must make the record-and-count a single atomic step, so
+   * concurrent callers see 1, 2, 3 … rather than all seeing the final total.
+   * In-memory storage gets this from not awaiting mid-method; Redis needs a
+   * script or a transaction.
+   *
+   * @param key - The identifier
+   * @param windowMs - Time window in milliseconds
+   * @returns This request's position in the window, and when the window clears
+   * @optional Falls back to increment + getSlidingWindowCount when absent
+   */
+  consumeSlidingWindow?: (key: string, windowMs: number) => Promise<{
+    count: number
+    resetTime: number
+  }>
+
+  /**
    * Increment multiple keys in a batch operation.
    * Optional optimization for handling multiple keys efficiently.
    *
