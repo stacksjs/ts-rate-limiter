@@ -1,3 +1,21 @@
+[Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.5...v0.4.6)
+
+## 🐛 Bug Fixes
+
+- **sliding-window**: judge a request on its own position ([7dc83c1](https://github.com/stacksjs/ts-rate-limiter/commit/7dc83c1)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 📚 Documentation
+
+- **changelog**: record the 0.4.5 timer fix ([3d24e8c](https://github.com/stacksjs/ts-rate-limiter/commit/3d24e8c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.4.6 ([81bcef8](https://github.com/stacksjs/ts-rate-limiter/commit/81bcef8)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.4...v0.4.5)
 
 ## 🐞 Fixes
