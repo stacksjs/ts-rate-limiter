@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.7...v0.4.8)
+
+## 🐛 Bug Fixes
+
+- **build**: build the CLI the bin field points at ([6b7572c](https://github.com/stacksjs/ts-rate-limiter/commit/6b7572c)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.4.8 ([9d83df1](https://github.com/stacksjs/ts-rate-limiter/commit/9d83df1)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.6...v0.4.7)
 
 ## ⚡ Performance Improvements
