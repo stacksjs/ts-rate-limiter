@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.6...v0.4.7)
+
+## ⚡ Performance Improvements
+
+- **build**: cut the waste out of the published output ([18b660d](https://github.com/stacksjs/ts-rate-limiter/commit/18b660d)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.4.7 ([239c6dc](https://github.com/stacksjs/ts-rate-limiter/commit/239c6dc)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.5...v0.4.6)
 
 ## 🐛 Bug Fixes
