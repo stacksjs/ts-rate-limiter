@@ -47,7 +47,7 @@ export class MemoryStorage implements StorageProvider {
       this.records.set(key, newRecord)
       if (this.trackTimestamps)
         this.timestamps.set(key, [now])
-      return newRecord
+      return { count: newRecord.count, resetTime: newRecord.resetTime }
     }
 
     // Update existing record
@@ -64,7 +64,8 @@ export class MemoryStorage implements StorageProvider {
       this.timestamps.set(key, timestamps)
     }
 
-    return record
+    // Each awaiting caller must receive its own position, not the mutable bucket.
+    return { count: record.count, resetTime: record.resetTime }
   }
 
   async reset(key: string): Promise<void> {
