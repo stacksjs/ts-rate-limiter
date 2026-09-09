@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.8...v0.4.9)
+
+## 🐛 Bug Fixes
+
+- snapshot fixed-window increment results ([bbf0ba1](https://github.com/stacksjs/ts-rate-limiter/commit/bbf0ba1)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.4.9 ([c16b841](https://github.com/stacksjs/ts-rate-limiter/commit/c16b841)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.7...v0.4.8)
 
 ## 🐛 Bug Fixes
