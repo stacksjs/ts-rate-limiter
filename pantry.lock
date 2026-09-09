@@ -1,17 +1,25 @@
 {
   "version": "1.0",
   "packages": {
-    "bun.sh@1.3.11": {
-      "name": "bun.sh",
-      "version": "1.3.11",
-      "resolved": "registry:bun.sh@1.3.11",
-      "integrity": "sha256:61aefeb2d13032a726efaca2ceff6667342381a393cb6550ded85f0ebb76890d"
-    },
-    "redis.io@7.4.8": {
+    "redis.io@8.10.1": {
       "name": "redis.io",
-      "version": "7.4.8",
-      "resolved": "registry:redis.io@7.4.8",
-      "integrity": "sha256:4621524b302a87135918e48b125909ba2e288805cb785505851c611f484bf779"
+      "version": "8.10.1",
+      "resolved": "registry:redis.io@8.10.1"
+    },
+    "bun.sh@1.3.14": {
+      "name": "bun.sh",
+      "version": "1.3.14",
+      "resolved": "registry:bun.sh@1.3.14"
+    },
+    "curl.se/ca-certs@2026.3.19": {
+      "name": "curl.se/ca-certs",
+      "version": "2026.3.19",
+      "resolved": "registry:curl.se/ca-certs@2026.3.19"
+    },
+    "openssl.org@1.1.1w": {
+      "name": "openssl.org",
+      "version": "1.1.1w",
+      "resolved": "registry:openssl.org@1.1.1w"
     }
   }
 }
