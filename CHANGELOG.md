@@ -1,3 +1,17 @@
+[Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.9...v0.4.10)
+
+## 🐛 Bug Fixes
+
+- **ci**: let redis resolve to the line the registry actually publishes ([1da8992](https://github.com/stacksjs/ts-rate-limiter/commit/1da8992)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## 🧹 Chores
+
+- release v0.4.10 ([1708742](https://github.com/stacksjs/ts-rate-limiter/commit/1708742)) _(by Chris <chrisbreuer93@gmail.com>)_
+
+## Contributors
+
+- _Chris <chrisbreuer93@gmail.com>_
+
 [Compare changes](https://github.com/stacksjs/ts-rate-limiter/compare/v0.4.8...v0.4.9)
 
 ## 🐛 Bug Fixes
