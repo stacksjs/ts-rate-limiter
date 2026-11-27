@@ -62,7 +62,7 @@
     "release:patch": "bunx --bun @stacksjs/bumpx patch --recursive",
     "release:minor": "bunx --bun @stacksjs/bumpx minor --recursive",
     "release:major": "bunx --bun @stacksjs/bumpx major --recursive",
-    "postinstall": "bunx bun-git-hooks",
+    "hooks:install": "bun-git-hooks",
     "dev:docs": "bun --bun bunpress dev docs",
     "build:docs": "bun --bun bunpress build docs",
     "preview:docs": "bun --bun bunpress preview docs",
@@ -85,6 +85,6 @@
       },
       "autoRestage": true
     },
-    "commit-msg": "bunx gitlint --edit .git/COMMIT_EDITMSG"
+    "commit-msg": "bun x gitlint --edit \"$1\""
   }
 }
